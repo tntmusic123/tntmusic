@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { toast } from "sonner";
 import { addReservation, getBookedSlots } from "@/lib/store";
+import { sendAdminNotification } from "@/app/actions/email";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,11 +53,15 @@ export default function StudioBookPage() {
 
   // 날짜 선택 시 해당 날짜의 예약된 슬롯 조회
   useEffect(() => {
-    if (selectedDate) {
-      const dateStr = format(selectedDate, "yyyy-MM-dd");
-      setBookedSlots(getBookedSlots(dateStr));
-      setSelectedSlots([]); // 날짜 변경 시 선택 초기화
+    async function loadBookedSlots() {
+      if (selectedDate) {
+        const dateStr = format(selectedDate, "yyyy-MM-dd");
+        const slots = await getBookedSlots(dateStr);
+        setBookedSlots(slots);
+        setSelectedSlots([]); // 날짜 변경 시 선택 초기화
+      }
     }
+    loadBookedSlots();
   }, [selectedDate]);
 
   const toggleSlot = (slot: string) => {
@@ -72,10 +77,16 @@ export default function StudioBookPage() {
       return;
     }
 
-    addReservation({
+    await addReservation({
       ...data,
       date: format(selectedDate, "yyyy-MM-dd"),
       timeSlots: selectedSlots,
+    });
+
+    // [이메일 알림 연동]
+    await sendAdminNotification({
+      subject: `스튜디오 예약 신청: ${data.name} 님`,
+      content: `[예약 희망 일자] ${format(selectedDate, "yyyy년 MM월 dd일")}\n[예약 시간대] ${selectedSlots.join(", ")}\n[이름] ${data.name}\n[연락처] ${data.phone}\n[이메일] ${data.email || "미입력"}\n\n[요청 사항]\n${data.message || "(없음)"}`,
     });
 
     toast.success("예약 신청이 완료되었습니다! 확인 후 연락드리겠습니다.");
@@ -231,7 +242,7 @@ export default function StudioBookPage() {
                       <Label htmlFor="phone" className="flex items-center gap-1">
                         <Phone className="h-3 w-3" /> 연락처 <span className="text-destructive">*</span>
                       </Label>
-                      <Input id="phone" placeholder="010-0000-0000" {...register("phone")} />
+                      <Input id="phone" placeholder="010-2561-8636" {...register("phone")} />
                       {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
                     </div>
                   </div>

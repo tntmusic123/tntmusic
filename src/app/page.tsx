@@ -9,7 +9,11 @@ export default function Home() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
-    setSettings(getSiteSettings());
+    async function fetchSettings() {
+      const data = await getSiteSettings();
+      setSettings(data as SiteSettings);
+    }
+    fetchSettings();
   }, []);
 
   const heroImage = settings?.heroImageUrl || "";

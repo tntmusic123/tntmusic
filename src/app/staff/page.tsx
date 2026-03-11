@@ -143,7 +143,7 @@ export default function StaffPage() {
               </Button>
             </Link>
             <a href="tel:010-2561-8636">
-              <Button variant="outline" className="rounded-full border-white/15 text-white/60 hover:border-gold/30 hover:text-gold-light px-10 py-4 h-auto">
+              <Button variant="outline" className="rounded-full border border-white/20 bg-transparent text-white hover:bg-white/10 hover:border-white/40 px-10 py-4 h-auto transition-all">
                 전화 문의: 010-2561-8636
               </Button>
             </a>

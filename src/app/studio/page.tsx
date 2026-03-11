@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getReservations, getBookedSlots, type Reservation } from "@/lib/store";
+import { getReservations, getSiteSettings, type Reservation, type SiteSettings } from "@/lib/store";
 import { format, addDays, startOfWeek, isSameDay } from "date-fns";
 import { ko } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,9 +19,18 @@ const ALL_TIME_SLOTS = [
 export default function StudioPage() {
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
-    setReservations(getReservations());
+    async function loadData() {
+      const [fetchedReservations, fetchedSettings] = await Promise.all([
+        getReservations(),
+        getSiteSettings()
+      ]);
+      setReservations(fetchedReservations);
+      setSettings(fetchedSettings as SiteSettings);
+    }
+    loadData();
   }, []);
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -34,7 +43,10 @@ export default function StudioPage() {
     if (date < today && !isSameDay(date, today)) return "past";
     if (isSameDay(date, today) && Number(hour.split(":")[0]) < today.getHours()) return "past";
 
-    const booked = getBookedSlots(dateStr);
+    const booked = reservations
+      .filter((r) => r.date === dateStr && ["pending", "confirmed"].includes(r.status))
+      .flatMap((r) => r.timeSlots);
+      
     return booked.includes(slotLabel) ? "booked" : "available";
   };
 
@@ -63,15 +75,37 @@ export default function StudioPage() {
         <div className="mx-auto max-w-6xl px-6 lg:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
             {/* Left: Studio Visual */}
-            <div className="rounded-2xl overflow-hidden border border-border">
-              <div className="h-72 bg-navy flex items-center justify-center relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-navy-dark to-navy-light opacity-50" />
-                <svg className="w-16 h-16 text-gold/30 relative z-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 18V5l12-2v13" />
-                  <circle cx="6" cy="18" r="3" />
-                  <circle cx="18" cy="16" r="3" />
-                </svg>
+            <div className="rounded-2xl overflow-hidden border border-border group">
+              {/* Slider Area */}
+              <div className="h-80 sm:h-[400px] bg-navy relative overflow-hidden">
+                {settings?.studioImages && settings.studioImages.length > 0 ? (
+                  <div className="flex w-full h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide no-scrollbar">
+                    {settings.studioImages.map((img: string, idx: number) => (
+                      <div key={idx} className="w-full h-full flex-shrink-0 snap-center">
+                        <img src={img} alt={`Studio ${idx + 1}`} className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-navy-dark to-navy-light opacity-50" />
+                    <svg className="w-16 h-16 text-gold/30 relative z-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 18V5l12-2v13" />
+                      <circle cx="6" cy="18" r="3" />
+                      <circle cx="18" cy="16" r="3" />
+                    </svg>
+                  </div>
+                )}
+                {settings?.studioImages && settings.studioImages.length > 1 && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+                    {settings.studioImages.map((_: any, idx: number) => (
+                      <div key={idx} className="w-1.5 h-1.5 rounded-full bg-white/30" />
+                    ))}
+                  </div>
+                )}
               </div>
+              
+              {/* Info Area (Inside the same border card) */}
               <div className="p-8 bg-background">
                 <h2 className="text-2xl font-bold text-foreground mb-1">TNT Studio</h2>
                 <p className="text-sm text-primary tracking-wider mb-5">Premium Practice Room</p>
@@ -96,13 +130,19 @@ export default function StudioPage() {
                   ))}
                 </div>
 
-                <div className="flex items-center justify-between pt-5 border-t border-border">
-                  <div>
-                    <span className="text-3xl font-bold text-gradient-gold">₩30,000</span>
-                    <span className="text-xs text-muted-foreground ml-1">/ 시간</span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-5 border-t border-border gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground mr-4">평일 (월~금)</span>
+                      <span className="font-bold text-gradient-gold">{settings?.studioPriceWeekday || "시간당 15,000원"}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground flex-1">주말 및 공휴일 (토~일)</span>
+                      <span className="font-bold text-gradient-gold">{settings?.studioPriceWeekend || "시간당 18,000원"}</span>
+                    </div>
                   </div>
                   <Link href="/studio/book">
-                    <Button className="btn-gold rounded-full px-8 py-2.5 text-sm font-semibold h-auto">
+                    <Button className="btn-gold rounded-full px-8 py-2.5 text-sm font-semibold h-auto w-full sm:w-auto">
                       예약하기
                     </Button>
                   </Link>
@@ -220,10 +260,10 @@ export default function StudioPage() {
             예약 신청 후 확인 연락을 드리며, 이용료는 계좌이체로 결제합니다.<br />
             <strong className="text-primary">24시간 운영</strong>으로 언제든 연습이 가능합니다.
           </p>
-          <div className="inline-flex items-center gap-3 bg-background border border-primary/20 rounded-xl px-6 py-4">
-            <Music className="w-5 h-5 text-primary flex-shrink-0" />
-            <span className="text-sm text-foreground font-medium">예약 문의: 010-0000-0000</span>
-          </div>
+            <div className="inline-flex items-center gap-3 bg-background border border-primary/20 rounded-xl px-6 py-4">
+              <Music className="w-5 h-5 text-primary flex-shrink-0" />
+              <span className="text-sm text-foreground font-medium">예약 문의: 010-2561-8636</span>
+            </div>
         </div>
       </section>
     </>

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { format } from "date-fns";
+import { getNotes } from "@/lib/store";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -6,40 +8,12 @@ export const metadata: Metadata = {
   description: "TNT Music 노트 - 성악, 뮤지컬, 보이스 트레이닝에 대한 소소한 이야기를 전합니다.",
 };
 
-const categories = ["전체", "보이스 랩", "오디션 인사이드", "아티스트 인터뷰", "공연 리뷰"];
+const categories = ["전체", "보이스 랩", "오디션 인사이드", "아티스트 인터뷰", "공연 리뷰", "Notice"];
 
-const posts = [
-  {
-    id: 1,
-    category: "보이스 랩",
-    title: "성악 발성의 기초: 올바른 호흡법",
-    excerpt: "효과적인 성악 발성을 위한 복식호흡과 횡격막 사용법에 대해 알아봅니다.",
-    date: "2026. 03. 05",
-  },
-  {
-    id: 2,
-    category: "오디션 인사이드",
-    title: "뮤지컬 오디션 준비 가이드",
-    excerpt: "뮤지컬 오디션에서 심사위원이 주목하는 핵심 포인트와 준비 전략을 소개합니다.",
-    date: "2026. 03. 01",
-  },
-  {
-    id: 3,
-    category: "아티스트 인터뷰",
-    title: "무대 위의 열정, 소프라노 OOO 인터뷰",
-    excerpt: "TNT Music 소속 소프라노의 음악 이야기와 앞으로의 계획을 들어봅니다.",
-    date: "2026. 02. 25",
-  },
-  {
-    id: 4,
-    category: "공연 리뷰",
-    title: "2026 봄 시즌 주요 공연 프리뷰",
-    excerpt: "올봄 놓치지 말아야 할 성악과 뮤지컬 공연을 미리 살펴봅니다.",
-    date: "2026. 02. 20",
-  },
-];
-
-export default function NotePage() {
+// Next.js 서버 컴포넌트는 페이지 컴포넌트에 async를 사용할 수 있습니다.
+export default async function NotePage() {
+  const posts = await getNotes();
+  
   return (
     <>
       {/* Hero */}
@@ -85,25 +59,35 @@ export default function NotePage() {
                 className="group rounded-2xl border border-border overflow-hidden transition-all hover:shadow-xl hover:border-gold/20"
                 id={`post-${post.id}`}
               >
-                {/* Placeholder image */}
-                <div className="h-48 bg-navy relative overflow-hidden flex items-center justify-center">
-                  <div className="absolute inset-0 bg-gradient-to-br from-navy-dark/80 to-navy-light/80 transition-all group-hover:opacity-70" />
-                  <svg className="w-10 h-10 text-gold/20 relative z-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                  </svg>
-                  <span className="absolute top-4 left-4 text-[11px] px-3 py-1 rounded-full bg-gold/90 text-white font-medium z-10">
-                    {post.category}
-                  </span>
-                </div>
+                {post.coverImageUrl ? (
+                  <div className="h-48 relative overflow-hidden flex items-center justify-center bg-muted">
+                    <img src={post.coverImageUrl} alt={post.title} className="w-full h-full object-cover transition-all group-hover:scale-105" />
+                    <span className="absolute top-4 left-4 text-[11px] px-3 py-1 rounded-full bg-gold/90 text-white font-medium z-10">
+                      {post.category}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="h-48 bg-navy relative overflow-hidden flex items-center justify-center">
+                    <div className="absolute inset-0 bg-gradient-to-br from-navy-dark/80 to-navy-light/80 transition-all group-hover:opacity-70" />
+                    <svg className="w-10 h-10 text-gold/20 relative z-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                    </svg>
+                    <span className="absolute top-4 left-4 text-[11px] px-3 py-1 rounded-full bg-gold/90 text-white font-medium z-10">
+                      {post.category}
+                    </span>
+                  </div>
+                )}
 
                 <div className="p-6">
-                  <time className="text-xs text-muted-foreground">{post.date}</time>
+                  <time className="text-xs text-muted-foreground">
+                    {format(new Date(post.createdAt), "yyyy. MM. dd")}
+                  </time>
                   <h3 className="text-lg font-bold text-foreground mt-2 mb-3 group-hover:text-gold transition-colors">
                     {post.title}
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
-                    {post.excerpt}
+                    {post.content.length > 50 ? post.content.substring(0, 50) + "..." : post.content}
                   </p>
                   <Link
                     href={`/note/${post.id}`}

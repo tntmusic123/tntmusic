@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getArtists } from "@/lib/store";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -6,16 +7,9 @@ export const metadata: Metadata = {
   description: "TNT Music 소속 아티스트 로스터 - 재능 있는 성악가와 뮤지컬 배우를 만나보세요.",
 };
 
-const artists = [
-  { id: 1, name: "아티스트명", voice: "소프라노", field: "성악", initial: "A" },
-  { id: 2, name: "아티스트명", voice: "테너", field: "성악", initial: "B" },
-  { id: 3, name: "아티스트명", voice: "바리톤", field: "뮤지컬", initial: "C" },
-  { id: 4, name: "아티스트명", voice: "메조소프라노", field: "성악", initial: "D" },
-  { id: 5, name: "아티스트명", voice: "뮤지컬 배우", field: "뮤지컬", initial: "E" },
-  { id: 6, name: "아티스트명", voice: "소프라노", field: "성악", initial: "F" },
-];
+export default async function ArtistsPage() {
+  const artists = await getArtists();
 
-export default function ArtistsPage() {
   return (
     <>
       {/* Hero */}
@@ -55,26 +49,34 @@ export default function ArtistsPage() {
       <section className="py-24 bg-background" id="artists-grid">
         <div className="mx-auto max-w-6xl px-6 lg:px-12">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {artists.map((artist) => (
-              <div
-                key={artist.id}
-                className="group rounded-2xl border border-border overflow-hidden transition-all hover:shadow-xl hover:border-gold/20"
-                id={`artist-card-${artist.id}`}
-              >
-                {/* Placeholder avatar */}
-                <div className="aspect-[3/4] bg-navy relative overflow-hidden flex items-center justify-center">
-                  <div className="absolute inset-0 bg-gradient-to-t from-navy-dark/90 via-transparent to-transparent" />
-                  <span className="text-6xl font-bold text-gold/10">{artist.initial}</span>
-                  <div className="absolute bottom-4 left-4 right-4 z-10">
-                    <h3 className="text-lg font-bold text-white mb-1">{artist.name}</h3>
-                    <div className="flex gap-2">
-                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-gold/20 text-gold-light">{artist.voice}</span>
-                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-white/60">{artist.field}</span>
+            {artists.length === 0 ? (
+              <div className="col-span-1 sm:col-span-2 lg:col-span-3 text-center py-20 text-muted-foreground">
+                등록된 아티스트가 없습니다.
+              </div>
+            ) : (
+              artists.map((artist) => (
+                <div
+                  key={artist.id}
+                  className="group rounded-2xl border border-border overflow-hidden transition-all hover:shadow-xl hover:border-gold/20"
+                >
+                  <div className="aspect-[3/4] bg-navy relative overflow-hidden flex items-center justify-center">
+                    {artist.imageUrl ? (
+                      <img src={artist.imageUrl} alt={artist.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    ) : (
+                       <span className="text-6xl font-bold text-gold/10">{artist.name[0]}</span>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                    <div className="absolute bottom-4 left-4 right-4 z-10 text-left">
+                      <h3 className="text-xl font-bold text-white mb-2">{artist.name}</h3>
+                      <div className="flex gap-2">
+                        {artist.voice && <span className="text-[11px] px-2 py-0.5 rounded-full bg-gold/20 text-gold-light border border-gold/30">{artist.voice}</span>}
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-white/80 border border-white/20">{artist.field}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
           {/* CTA */}

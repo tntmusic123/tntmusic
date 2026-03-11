@@ -23,6 +23,9 @@ const contactSchema = z.object({
 
 type ContactFormData = z.infer<typeof contactSchema>;
 
+import { addInquiry } from "@/lib/store";
+import { sendAdminNotification } from "@/app/actions/email";
+
 export default function ContactPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -36,9 +39,20 @@ export default function ContactPage() {
   });
 
   const onSubmit = async (data: ContactFormData) => {
-    // Mock 제출 (Supabase 연동 시 교체)
-    console.log("문의 데이터:", data);
-    await new Promise((r) => setTimeout(r, 1000));
+    await addInquiry(
+      data.inquiryType,
+      data.name,
+      data.phone,
+      data.email,
+      data.message,
+      window.location.href // sourceUrl
+    );
+
+    // [이메일 알림 연동]
+    await sendAdminNotification({
+      subject: `웹사이트 문의 접수: ${data.name} 님`,
+      content: `[문의 유형] ${data.inquiryType}\n[이름] ${data.name}\n[연락처] ${data.phone}\n[이메일] ${data.email || "미입력"}\n\n[문의 내용]\n${data.message}`,
+    });
 
     toast.success("문의가 정상적으로 접수되었습니다. 빠르게 답변드리겠습니다!");
     setIsSubmitted(true);
@@ -93,7 +107,7 @@ export default function ContactPage() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="phone">연락처 <span className="text-destructive">*</span></Label>
-                      <Input id="phone" placeholder="010-0000-0000" {...register("phone")} />
+                      <Input id="phone" placeholder="010-2561-8636" {...register("phone")} />
                       {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
                     </div>
                   </div>
