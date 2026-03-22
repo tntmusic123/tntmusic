@@ -53,6 +53,7 @@ export default function AdminPage() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
+  const [inquiries, setInquiries] = useState<any[]>([]);
   
   // Note Form State
   const [isComposingNote, setIsComposingNote] = useState(false);
@@ -60,9 +61,12 @@ export default function AdminPage() {
   const [isUploadingNoteImage, setIsUploadingNoteImage] = useState(false);
   const [isSubmittingNote, setIsSubmittingNote] = useState(false);
 
+  // Hero Image State
+  const [isUploadingHeroImage, setIsUploadingHeroImage] = useState(false);
+
   // Artist Form State
   const [isComposingArtist, setIsComposingArtist] = useState(false);
-  const [artistForm, setArtistForm] = useState({ name: "", voice: "", field: "성악", imageUrl: "" });
+  const [artistForm, setArtistForm] = useState({ name: "", role: "성악", bio: "", imageUrl: "" });
   const [isUploadingArtistImage, setIsUploadingArtistImage] = useState(false);
   const [isSubmittingArtist, setIsSubmittingArtist] = useState(false);
   
@@ -80,16 +84,18 @@ export default function AdminPage() {
 
   useEffect(() => {
     async function loadData() {
-      const [fetchedSettings, fetchedReservations, fetchedNotes, fetchedArtists] = await Promise.all([
+      const [fetchedSettings, fetchedReservations, fetchedNotes, fetchedArtists, fetchedInquiries] = await Promise.all([
         getSiteSettings(),
         getReservations(),
         getNotes(),
         getArtists(),
+        import("@/lib/store").then(m => m.getInquiries())
       ]);
       setSettings(fetchedSettings as SiteSettings);
       setReservations(fetchedReservations);
       setNotes(fetchedNotes);
       setArtists(fetchedArtists);
+      setInquiries(fetchedInquiries);
     }
     loadData();
   }, []);
@@ -112,12 +118,24 @@ export default function AdminPage() {
 
   const saveSettings = async () => {
     await updateSiteSettings({ 
-      heroImageUrl: previewUrl || settings.heroImageUrl,
+      heroImageUrl: previewUrl || settings.heroImageUrl || "",
       aboutImageUrl: settings.aboutImageUrl || "", // 백워드
       aboutImages: settings.aboutImages || [],
       studioImages: settings.studioImages || [],
       studioPriceWeekday: settings.studioPriceWeekday || "시간당 15,000원",
       studioPriceWeekend: settings.studioPriceWeekend || "시간당 18,000원",
+      studioDescription: settings.studioDescription || "",
+      contactPhone: settings.contactPhone || "",
+      contactEmail: settings.contactEmail || "",
+      contactAddress: settings.contactAddress || "",
+      bankInfo: settings.bankInfo || "",
+      siteTitle: settings.siteTitle || "",
+      siteDescription: settings.siteDescription || "",
+      siteKeywords: settings.siteKeywords || "",
+      adminPath: settings.adminPath || "",
+      adminPassword: settings.adminPassword || "",
+      noteCategories: settings.noteCategories || [],
+      artistFields: settings.artistFields || [],
     });
     const updatedSettings = await getSiteSettings();
     setSettings(updatedSettings as SiteSettings);
@@ -154,11 +172,28 @@ export default function AdminPage() {
   };
 
   const clearHeroImage = async () => {
+    if (!confirm("히어로 이미지를 초기화하시겠습니까?")) return;
     await updateSiteSettings({ heroImageUrl: "" });
     const updatedSettings = await getSiteSettings();
     setSettings(updatedSettings as SiteSettings);
     setPreviewUrl("");
     toast.success("히어로 이미지가 초기화되었습니다.");
+  };
+
+  const handleHeroImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingHeroImage(true);
+    const url = await uploadStorageImage(file);
+    if (url) {
+      setPreviewUrl(url);
+      setSettings(prev => ({ ...prev, heroImageUrl: url }));
+      toast.success("히어로 이미지가 업로드되었습니다. 저장 버튼을 눌러 확정해주세요.");
+    } else {
+      toast.error("이미지 업로드에 실패했습니다.");
+    }
+    setIsUploadingHeroImage(false);
   };
 
   const handleLogout = async () => {
@@ -279,20 +314,27 @@ export default function AdminPage() {
       toast.error("아티스트 이름을 입력해주세요.");
       return;
     }
-    setIsSubmittingArtist(true);
-    await addArtist({
-      name: artistForm.name,
-      voice: artistForm.voice,
-      field: artistForm.field,
-      imageUrl: artistForm.imageUrl
-    });
     
-    const updated = await getArtists();
-    setArtists(updated);
-    setIsSubmittingArtist(false);
-    setIsComposingArtist(false);
-    setArtistForm({ name: "", voice: "", field: "성악", imageUrl: "" });
-    toast.success("새 아티스트가 등록되었습니다.");
+    setIsSubmittingArtist(true);
+    try {
+      await addArtist({
+        name: artistForm.name,
+        role: artistForm.role,
+        bio: artistForm.bio,
+        imageUrl: artistForm.imageUrl
+      });
+      
+      const updated = await getArtists();
+      setArtists(updated);
+      setIsSubmittingArtist(false);
+      setIsComposingArtist(false);
+      setArtistForm({ name: "", role: "성악", bio: "", imageUrl: "" });
+      toast.success("새 아티스트가 등록되었습니다.");
+    } catch (err: any) {
+      console.error(err);
+      toast.error(`저장 실패: ${err.message || "오류가 발생했습니다."}`);
+      setIsSubmittingArtist(false);
+    }
   };
 
   const handleArtistDelete = async (id: string) => {
@@ -353,7 +395,7 @@ export default function AdminPage() {
       <main className="flex-1 flex flex-col overflow-hidden bg-slate-950 relative">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-slate-950 to-slate-950 pointer-events-none" />
         
-        <header className="px-6 py-4 md:px-8 md:py-6 border-b border-slate-800/60 bg-slate-900/80 backdrop-blur-md sticky top-0 z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 relative">
+        <header className="px-6 py-4 md:px-8 md:py-6 border-b border-slate-800/60 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 flex flex-col md:flex-row md:items-center justify-between gap-4 relative">
           <div className="flex items-center justify-between w-full md:w-auto">
             <h2 className="text-xl md:text-2xl font-bold text-white capitalize flex items-center gap-2">
               <span className="w-1.5 h-6 bg-primary rounded-full hidden md:block" />
@@ -443,17 +485,28 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    <div className="flex gap-4 items-end bg-slate-950/30 p-4 rounded-xl border border-slate-800/50">
-                      <div className="flex-1 space-y-2">
-                        <Label className="text-xs text-slate-400 font-bold uppercase tracking-wider">이미지 URL 직접 입력</Label>
-                        <Input
-                          placeholder="https://example.com/background.jpg"
-                          value={previewUrl || settings.heroImageUrl || ""}
-                          onChange={(e) => handleImageUrlChange(e.target.value)}
-                          className="bg-slate-950/50 border-slate-700/50 text-white h-11 focus-visible:ring-primary/50 placeholder:text-slate-600 rounded-xl"
-                        />
+                    <div className="flex flex-col sm:flex-row gap-4 items-end bg-slate-950/30 p-4 rounded-xl border border-slate-800/50">
+                      <div className="flex-1 w-full space-y-2">
+                        <Label className="text-xs text-slate-400 font-bold uppercase tracking-wider">이미지 URL 또는 직접 업로드</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="https://example.com/background.jpg"
+                            value={previewUrl || settings.heroImageUrl || ""}
+                            onChange={(e) => handleImageUrlChange(e.target.value)}
+                            className="bg-slate-950/50 border-slate-700/50 text-white h-11 focus-visible:ring-primary/50 placeholder:text-slate-600 rounded-xl"
+                          />
+                          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleHeroImageUpload} />
+                          <Button 
+                            variant="secondary" 
+                            disabled={isUploadingHeroImage}
+                            onClick={() => fileInputRef.current?.click()}
+                            className="h-11 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 hover:text-white flex-shrink-0 text-slate-300"
+                          >
+                            <Upload className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                      <Button variant="outline" onClick={clearHeroImage} className="gap-2 h-11 rounded-xl border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300">
+                      <Button variant="outline" onClick={clearHeroImage} className="gap-2 h-11 rounded-xl border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 w-full sm:w-auto">
                         <Trash2 className="h-4 w-4" /> 초기화
                       </Button>
                     </div>
@@ -556,9 +609,9 @@ export default function AdminPage() {
                     <p className="text-xs text-slate-400 mt-2">소개 페이지 상단에 롤링 페이퍼처럼 노출될 역동적인 이미지들입니다.</p>
                   </CardHeader>
                   <CardContent className="pt-6">
-                     <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                        {(settings.aboutImages || []).map((img, idx) => (
-                         <div key={idx} className="group relative aspect-square rounded-xl overflow-hidden border border-slate-700/50 bg-slate-950 shadow-inner">
+                         <div key={idx} className="group relative aspect-video rounded-xl overflow-hidden border border-slate-700/50 bg-slate-950 shadow-inner">
                             <img src={img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="About Slide" />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity" />
                             <button 
@@ -594,33 +647,33 @@ export default function AdminPage() {
                     <p className="text-xs text-slate-400 mt-2">연습실 페이지에 노출되어 시설의 분위기를 나타낼 사진들을 관리합니다.</p>
                   </CardHeader>
                   <CardContent className="pt-6">
-                     <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                       {(settings.studioImages || []).map((img, idx) => (
-                         <div key={idx} className="group relative aspect-square rounded-xl overflow-hidden border border-slate-700/50 bg-slate-950 shadow-inner">
-                            <img src={img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Studio Slide" />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <button 
-                              onClick={() => removeSettingsImage("studioImages", idx)}
-                              className="absolute top-2 right-2 bg-red-500/90 hover:bg-red-500 backdrop-blur-md text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity transform scale-90 group-hover:scale-100"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                         </div>
-                       ))}
-                       <button 
-                        onClick={() => studioImagesInputRef.current?.click()}
-                        disabled={isUploadingStudioImages}
-                        className="aspect-square flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-700 hover:border-primary/50 bg-slate-950/30 hover:bg-slate-950 transition-all text-slate-500 hover:text-primary group"
-                       >
-                         <Plus className="h-8 w-8 mb-2 group-hover:scale-110 transition-transform" />
-                         <span className="text-xs font-medium">{isUploadingStudioImages ? "처리 중..." : "이미지 추가"}</span>
-                       </button>
-                       <input 
-                        ref={studioImagesInputRef}
-                        type="file" multiple accept="image/*" className="hidden" 
-                        onChange={(e) => handleSettingsImageUpload("studioImages", e)}
-                       />
-                     </div>
+                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                        {(settings.studioImages || []).map((img, idx) => (
+                          <div key={idx} className="group relative aspect-video rounded-xl overflow-hidden border border-slate-700/50 bg-slate-950 shadow-inner">
+                             <img src={img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Studio Slide" />
+                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+                             <button 
+                               onClick={() => removeSettingsImage("studioImages", idx)}
+                               className="absolute top-2 right-2 bg-red-500/90 hover:bg-red-500 backdrop-blur-md text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity transform scale-90 group-hover:scale-100"
+                             >
+                               <X className="h-3 w-3" />
+                             </button>
+                          </div>
+                        ))}
+                        <button 
+                         onClick={() => studioImagesInputRef.current?.click()}
+                         disabled={isUploadingStudioImages}
+                         className="aspect-video flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-700 hover:border-primary/50 bg-slate-950/30 hover:bg-slate-950 transition-all text-slate-500 hover:text-primary group"
+                        >
+                          <Plus className="h-8 w-8 mb-2 group-hover:scale-110 transition-transform" />
+                          <span className="text-xs font-medium">{isUploadingStudioImages ? "처리 중..." : "이미지 추가"}</span>
+                        </button>
+                        <input 
+                         ref={studioImagesInputRef}
+                         type="file" multiple accept="image/*" className="hidden" 
+                         onChange={(e) => handleSettingsImageUpload("studioImages", e)}
+                        />
+                      </div>
                   </CardContent>
                 </Card>
 
@@ -853,21 +906,71 @@ export default function AdminPage() {
         {/* Inquiries Tab */}
         {activeTab === "inquiries" && (
           <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
-            <Card className="bg-slate-900/40 border-slate-800/80 shadow-2xl backdrop-blur-md overflow-hidden">
-              <CardContent className="py-32 text-center flex flex-col items-center justify-center relative">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-50" />
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-slate-800 to-slate-700 flex items-center justify-center mb-8 shadow-xl border border-slate-700/50 rotate-3 hover:rotate-0 transition-transform duration-500">
-                  <MessageSquare className="h-10 w-10 text-primary drop-shadow-[0_0_10px_rgba(200,160,80,0.5)]" />
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-white flex items-center gap-3">
+                <div className="p-2 bg-primary/20 rounded-lg border border-primary/30">
+                  <MessageSquare className="h-5 w-5 text-primary" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">고객 문의 데이터베이스 연동 준비 중</h3>
-                <p className="text-slate-400 max-w-md mx-auto leading-relaxed">
-                  웹사이트 폼을 통해 접수된 고객의 새로운 문의 사항들이 이곳에 자동으로 정렬되어 표시될 예정입니다.
-                </p>
-                <div className="mt-8 px-4 py-2 bg-slate-800/50 rounded-full border border-slate-700/50 text-xs font-mono text-slate-300 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" /> DB Connection Established
+                고객 문의 통합 내역
+              </h2>
+            </div>
+
+            {inquiries.length === 0 ? (
+              <Card className="bg-slate-900/40 border-slate-800/80 shadow-2xl backdrop-blur-md">
+                <CardContent className="py-32 text-center flex flex-col items-center justify-center">
+                  <div className="w-20 h-20 rounded-2xl bg-slate-800/50 flex items-center justify-center mb-6 shadow-md border border-slate-700/50">
+                    <MessageSquare className="h-10 w-10 text-slate-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2 tracking-tight">접수된 문의가 없습니다</h3>
+                  <p className="text-slate-400 max-w-sm">웹사이트의 상담 신청 폼을 통해 접수된 내역이 여기에 표시됩니다.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
+                <div className="overflow-x-auto custom-scrollbar">
+                  <table className="w-full text-sm text-left">
+                    <thead className="text-xs text-slate-400 uppercase bg-slate-900/90 border-b border-slate-800">
+                      <tr>
+                        <th className="px-6 py-5 font-semibold tracking-wider">고객 정보</th>
+                        <th className="px-6 py-5 font-semibold tracking-wider">문의 내용</th>
+                        <th className="px-6 py-5 font-semibold tracking-wider">접수일</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/50">
+                      {inquiries.map((inq) => (
+                        <tr key={inq.id} className="hover:bg-slate-800/40 transition-colors group">
+                          <td className="px-6 py-6 align-top">
+                            <div className="flex flex-col">
+                              <span className="font-bold text-slate-200 text-base tracking-tight">{inq.name}</span>
+                              <span className="text-slate-400 flex items-center gap-1.5 mt-1.5 text-xs">
+                                <Phone className="w-3 h-3 text-slate-500" /> {inq.phone}
+                              </span>
+                              {inq.email && <span className="text-[11px] text-slate-500 mt-1">{inq.email}</span>}
+                              <div className="mt-2 text-[10px] w-max px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">{inq.type}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-6 align-top">
+                            <div className="max-w-md">
+                              {inq.message ? (
+                                <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">{inq.message}</p>
+                              ) : (
+                                <span className="text-slate-600 italic">내용 없음</span>
+                              )}
+                              {inq.sourceUrl && (
+                                <p className="text-[10px] text-primary/50 mt-3 truncate">유입 경로: {inq.sourceUrl}</p>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-6 align-top whitespace-nowrap text-slate-500 text-xs">
+                            {new Date(inq.createdAt).toLocaleString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            )}
           </div>
         )}
 
@@ -1084,10 +1187,10 @@ export default function AdminPage() {
                        />
                     </div>
                     <div className="space-y-2">
-                       <Label className="text-xs text-slate-400 font-bold uppercase tracking-wider">음악 분야</Label>
+                       <Label className="text-xs text-slate-400 font-bold uppercase tracking-wider">음악 분야 (카테고리)</Label>
                        <select 
-                         value={artistForm.field}
-                         onChange={(e) => setArtistForm(prev => ({...prev, field: e.target.value}))}
+                         value={artistForm.role}
+                         onChange={(e) => setArtistForm(prev => ({...prev, role: e.target.value}))}
                          className="flex h-12 w-full rounded-xl border border-slate-700/50 bg-slate-950/50 px-4 py-2 text-white focus-visible:outline-none focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer hover:bg-slate-900 appearance-none"
                        >
                          {(settings.artistFields || ["성악", "뮤지컬", "기타"]).map(field => (
@@ -1096,11 +1199,11 @@ export default function AdminPage() {
                        </select>
                     </div>
                     <div className="md:col-span-2 space-y-2">
-                       <Label className="text-xs text-slate-400 font-bold uppercase tracking-wider">세부 파트 / 포지션 (선택)</Label>
+                       <Label className="text-xs text-slate-400 font-bold uppercase tracking-wider">아티스트 소개 및 세부 포지션 (선택)</Label>
                        <Input 
                          placeholder="예: 소프라노, 테너, 피아니스트 등" 
-                         value={artistForm.voice}
-                         onChange={(e) => setArtistForm(prev => ({...prev, voice: e.target.value}))}
+                         value={artistForm.bio}
+                         onChange={(e) => setArtistForm(prev => ({...prev, bio: e.target.value}))}
                          className="bg-slate-950/50 border-slate-700/50 text-white h-12 focus-visible:ring-primary/50 text-base placeholder:text-slate-600 rounded-xl"
                        />
                     </div>
@@ -1180,10 +1283,10 @@ export default function AdminPage() {
                         
                         <div className="absolute inset-x-0 bottom-0 p-5 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
                           <div className="flex flex-col gap-2">
-                            <span className="text-[10px] font-bold tracking-widest text-primary uppercase w-max rounded-md border border-primary/30 px-2.5 py-1 bg-primary/10 backdrop-blur-md">{artist.field}</span>
+                            <span className="text-[10px] font-bold tracking-widest text-primary uppercase w-max rounded-md border border-primary/30 px-2.5 py-1 bg-primary/10 backdrop-blur-md">{artist.role}</span>
                             <div>
                               <h3 className="font-bold text-xl text-white tracking-tight leading-tight">{artist.name}</h3>
-                              {artist.voice && <span className="text-xs text-slate-300 font-medium block mt-1">{artist.voice}</span>}
+                              {artist.bio && <span className="text-xs text-slate-300 font-medium block mt-1 line-clamp-2">{artist.bio}</span>}
                             </div>
                           </div>
                         </div>

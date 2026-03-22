@@ -69,8 +69,8 @@ export interface Note {
 export interface Artist {
   id: string;
   name: string;
-  voice: string;
-  field: string;
+  role: string;
+  bio: string;
   imageUrl?: string;
   createdAt: string;
 }
@@ -241,7 +241,10 @@ export async function addInquiry(
     status: "unread",
   });
 
-  if (error) console.error("insert inquiry error:", error);
+  if (error) {
+    console.error("insert inquiry error:", error);
+    throw error;
+  }
 
   // 이메일 발송 자동화 (에러 무시)
   try {
@@ -326,7 +329,10 @@ export async function addNote(note: Omit<Note, "id" | "createdAt">) {
     content: note.content,
     cover_image_url: note.coverImageUrl || "",
   });
-  if (error) console.error("add note error:", error);
+  if (error) {
+    console.error("add note error:", error);
+    throw error;
+  }
 }
 
 export async function deleteNote(id: string) {
@@ -350,8 +356,8 @@ export async function getArtists(): Promise<Artist[]> {
   return data.map((d: any) => ({
     id: d.id,
     name: d.name,
-    voice: d.voice,
-    field: d.field,
+    role: d.role,
+    bio: d.bio,
     imageUrl: d.image_url,
     createdAt: d.created_at,
   }));
@@ -360,11 +366,14 @@ export async function getArtists(): Promise<Artist[]> {
 export async function addArtist(artist: Omit<Artist, "id" | "createdAt">) {
   const { error } = await supabase.from("artists").insert({
     name: artist.name,
-    voice: artist.voice,
-    field: artist.field,
+    role: artist.role,
+    bio: artist.bio,
     image_url: artist.imageUrl || "",
   });
-  if (error) console.error("add artist error:", error);
+  if (error) {
+    console.error("add artist error:", error);
+    throw error;
+  }
 }
 
 export async function deleteArtist(id: string) {
