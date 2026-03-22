@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getSiteSettings } from "@/lib/store";
 import type { Metadata } from "next";
+import { PremiumCarousel } from "@/components/PremiumCarousel";
 
 export const metadata: Metadata = {
   title: "ABOUT | TNT Music",
@@ -58,13 +59,7 @@ export default async function AboutPage() {
             <div className="relative group">
               <div className="aspect-[4/3] rounded-2xl bg-navy overflow-hidden border border-white/5 shadow-xl relative">
                 {settings?.aboutImages && settings.aboutImages.length > 0 ? (
-                  <div className="flex w-full h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide no-scrollbar">
-                    {settings.aboutImages.map((img: string, idx: number) => (
-                      <div key={idx} className="w-full h-full flex-shrink-0 snap-center">
-                        <img src={img} alt={`About ${idx + 1}`} className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                  </div>
+                  <PremiumCarousel images={settings.aboutImages} />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <Image
@@ -74,13 +69,6 @@ export default async function AboutPage() {
                       height={200}
                       className="w-32 h-auto opacity-20 invert"
                     />
-                  </div>
-                )}
-                {settings?.aboutImages && settings.aboutImages.length > 1 && (
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 z-10">
-                    {settings.aboutImages.map((_: any, idx: number) => (
-                      <div key={idx} className="w-1.5 h-1.5 rounded-full bg-white/30" />
-                    ))}
                   </div>
                 )}
               </div>

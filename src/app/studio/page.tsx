@@ -8,6 +8,7 @@ import { ko } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, Clock, Music, Piano, ChevronLeft, ChevronRight, Shield, Maximize } from "lucide-react";
+import { PremiumCarousel } from "@/components/PremiumCarousel";
 
 const ALL_TIME_SLOTS = [
   "00:00","01:00","02:00","03:00","04:00","05:00",
@@ -76,16 +77,9 @@ export default function StudioPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
             {/* Left: Studio Visual */}
             <div className="rounded-2xl overflow-hidden border border-border group">
-              {/* Slider Area */}
               <div className="h-80 sm:h-[400px] bg-navy relative overflow-hidden">
                 {settings?.studioImages && settings.studioImages.length > 0 ? (
-                  <div className="flex w-full h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide no-scrollbar">
-                    {settings.studioImages.map((img: string, idx: number) => (
-                      <div key={idx} className="w-full h-full flex-shrink-0 snap-center">
-                        <img src={img} alt={`Studio ${idx + 1}`} className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                  </div>
+                  <PremiumCarousel images={settings.studioImages} />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-navy-dark to-navy-light opacity-50" />
@@ -94,13 +88,6 @@ export default function StudioPage() {
                       <circle cx="6" cy="18" r="3" />
                       <circle cx="18" cy="16" r="3" />
                     </svg>
-                  </div>
-                )}
-                {settings?.studioImages && settings.studioImages.length > 1 && (
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 z-10">
-                    {settings.studioImages.map((_: any, idx: number) => (
-                      <div key={idx} className="w-1.5 h-1.5 rounded-full bg-white/30" />
-                    ))}
                   </div>
                 )}
               </div>

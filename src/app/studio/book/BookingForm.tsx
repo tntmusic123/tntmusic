@@ -9,13 +9,14 @@ import { DayPicker } from "react-day-picker";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { toast } from "sonner";
-import { addReservation, getBookedSlots } from "@/lib/store";
+import { addReservation, getBookedSlots, getSiteSettings, type SiteSettings } from "@/lib/store";
 import { sendAdminNotification } from "@/app/actions/email";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PremiumCarousel } from "@/components/PremiumCarousel";
 import { CalendarDays, Clock, User, Phone, Mail, MessageSquare, CheckCircle2, ArrowLeft } from "lucide-react";
 import "react-day-picker/style.css";
 
@@ -43,6 +44,8 @@ export default function BookingForm() {
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -53,6 +56,9 @@ export default function BookingForm() {
 
   useEffect(() => {
     async function loadBookedSlots() {
+      const fetchedSettings = await getSiteSettings();
+      setSettings(fetchedSettings as SiteSettings);
+
       if (selectedDate) {
         const dateStr = format(selectedDate, "yyyy-MM-dd");
         const slots = await getBookedSlots(dateStr);
@@ -141,6 +147,17 @@ export default function BookingForm() {
 
       <section className="py-16 bg-background">
         <div className="mx-auto max-w-4xl px-6">
+          
+          {/* Studio Carousel Context */}
+          {settings?.studioImages && settings.studioImages.length > 0 && (
+            <div className="mb-12">
+              <h2 className="text-lg font-bold text-foreground mb-4">예약하실 스튜디오 전경</h2>
+              <div className="h-64 sm:h-[400px] rounded-2xl overflow-hidden border border-border bg-navy shadow-lg relative group">
+                <PremiumCarousel images={settings.studioImages} autoplayInterval={4000} />
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
             <div>
               <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">

@@ -5,6 +5,8 @@ import { format } from "date-fns";
 import { getNoteById } from "@/lib/store";
 import { ArrowLeft, CalendarDays } from "lucide-react";
 import NoteInquiryForm from "@/components/NoteInquiryForm";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { Metadata, ResolvingMetadata } from "next";
 
 type Props = {
@@ -65,10 +67,10 @@ export default async function NoteDetailPage({ params }: Props) {
           )}
 
           {/* Content */}
-          <div className="prose prose-invert prose-gold max-w-none text-foreground leading-loose">
-            {note.content.split('\n').map((paragraph, idx) => (
-              <p key={idx} className="mb-4">{paragraph}</p>
-            ))}
+          <div className="prose prose-invert prose-gold max-w-none text-foreground leading-loose prose-img:rounded-xl prose-img:border prose-img:border-border prose-a:text-gold hover:prose-a:text-gold-light">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {note.content}
+            </ReactMarkdown>
           </div>
 
           <div className="mt-16 pt-8 border-t border-border/50 text-center">

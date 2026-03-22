@@ -315,25 +315,38 @@ export default function AdminPage() {
       return;
     }
     
-    setIsSubmittingArtist(true);
+    // 1. Optimistic Update
+    const optimisticArtist: Artist = {
+      id: `temp-${Date.now()}`,
+      name: artistForm.name,
+      role: artistForm.role,
+      bio: artistForm.bio,
+      imageUrl: artistForm.imageUrl,
+      createdAt: new Date().toISOString()
+    };
+    
+    setArtists(prev => [optimisticArtist, ...prev]);
+    setIsComposingArtist(false);
+    setArtistForm({ name: "", role: "성악", bio: "", imageUrl: "" });
+    toast.success("새 아티스트가 등록되었습니다.");
+
+    // 2. Background Network Request
     try {
       await addArtist({
-        name: artistForm.name,
-        role: artistForm.role,
-        bio: artistForm.bio,
-        imageUrl: artistForm.imageUrl
+        name: optimisticArtist.name,
+        role: optimisticArtist.role,
+        bio: optimisticArtist.bio,
+        imageUrl: optimisticArtist.imageUrl
       });
       
       const updated = await getArtists();
       setArtists(updated);
-      setIsSubmittingArtist(false);
-      setIsComposingArtist(false);
-      setArtistForm({ name: "", role: "성악", bio: "", imageUrl: "" });
-      toast.success("새 아티스트가 등록되었습니다.");
     } catch (err: any) {
       console.error(err);
       toast.error(`저장 실패: ${err.message || "오류가 발생했습니다."}`);
-      setIsSubmittingArtist(false);
+      // Revert on failure
+      const updated = await getArtists();
+      setArtists(updated);
     }
   };
 
