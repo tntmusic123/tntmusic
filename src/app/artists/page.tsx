@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { getArtists } from "@/lib/store";
+import { FilterBar } from "@/components/FilterBar";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -7,8 +9,19 @@ export const metadata: Metadata = {
   description: "TNT Music 소속 아티스트 로스터 - 재능 있는 성악가와 뮤지컬 배우를 만나보세요.",
 };
 
-export default async function ArtistsPage() {
-  const artists = await getArtists();
+export default async function ArtistsPage({ 
+  searchParams 
+}: { 
+  searchParams: Promise<{ category?: string }> 
+}) {
+  const resolvedParams = await searchParams;
+  const currentCategory = resolvedParams.category || "전체";
+  let artists = await getArtists();
+
+  // 필터링 적용
+  if (currentCategory !== "전체") {
+    artists = artists.filter(artist => artist.role === currentCategory);
+  }
 
   return (
     <>
@@ -28,21 +41,14 @@ export default async function ArtistsPage() {
       </section>
 
       {/* Filter Tabs */}
-      <section className="py-6 bg-background border-b border-border sticky top-[64px] z-30" id="artists-filter">
-        <div className="mx-auto max-w-6xl px-6 flex items-center gap-3 overflow-x-auto">
-          {["전체", "성악", "뮤지컬"].map((cat) => (
-            <button
-              key={cat}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
-                cat === "전체"
-                  ? "bg-gold text-white"
-                  : "bg-muted text-muted-foreground hover:bg-gold/10 hover:text-gold"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+      <section className="py-2 bg-background border-b border-border sticky top-[64px] z-30" id="artists-filter">
+        <Suspense fallback={<div className="h-10" />}>
+          <FilterBar 
+            categories={["전체", "성악", "뮤지컬"]} 
+            currentCategory={currentCategory} 
+            baseUrl="/artists" 
+          />
+        </Suspense>
       </section>
 
       {/* Artist Grid */}
@@ -55,26 +61,33 @@ export default async function ArtistsPage() {
               </div>
             ) : (
               artists.map((artist) => (
-                <div
+                <Link
                   key={artist.id}
-                  className="group rounded-2xl border border-border overflow-hidden transition-all hover:shadow-xl hover:border-gold/20"
+                  href={`/artists/${artist.id}`}
+                  className="group rounded-2xl border border-border overflow-hidden transition-all hover:shadow-2xl hover:border-gold/30 hover:-translate-y-1 block"
                 >
                   <div className="aspect-[3/4] bg-navy relative overflow-hidden flex items-center justify-center">
                     {artist.imageUrl ? (
-                      <img src={artist.imageUrl} alt={artist.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      <img src={artist.imageUrl} alt={artist.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                     ) : (
-                       <span className="text-6xl font-bold text-gold/10">{artist.name[0]}</span>
+                       <span className="text-6xl font-bold text-gold/10 group-hover:scale-110 transition-transform duration-700">{artist.name[0]}</span>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                    <div className="absolute bottom-4 left-4 right-4 z-10 text-left">
-                      <h3 className="text-xl font-bold text-white mb-2">{artist.name}</h3>
-                      <div className="flex gap-2">
-                        {artist.bio && <span className="text-[11px] px-2 py-0.5 rounded-full bg-gold/20 text-gold-light border border-gold/30">{artist.bio}</span>}
-                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-white/80 border border-white/20">{artist.role}</span>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+                    <div className="absolute bottom-6 left-6 right-6 z-10 text-left transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+                      <div className="flex flex-col gap-2">
+                        <span className="text-[10px] font-bold tracking-[0.2em] text-gold uppercase px-2 py-0.5 bg-gold/10 border border-gold/20 rounded w-fit backdrop-blur-sm">
+                          {artist.role}
+                        </span>
+                        <h3 className="text-2xl font-bold text-white tracking-tight leading-none">{artist.name}</h3>
+                        {artist.bio && (
+                          <p className="text-xs text-white/60 line-clamp-1 font-medium mt-1">
+                            {artist.bio}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))
             )}
           </div>
