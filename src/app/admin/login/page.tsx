@@ -1,9 +1,10 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lock } from "lucide-react";
+import { getSiteSettings } from "@/lib/store";
 
 export default async function AdminLoginPage({
   searchParams,
@@ -15,7 +16,19 @@ export default async function AdminLoginPage({
   async function login(formData: FormData) {
     "use server";
     const password = formData.get("password") as string;
-    const adminPassword = process.env.ADMIN_PASSWORD || "tntmusic123";
+    
+    const settings = await getSiteSettings();
+    const adminPassword = settings.adminPassword || "tntmusic123";
+    
+    const reqHeaders = await headers();
+    const referer = reqHeaders.get("referer");
+    let basePath = "/admin";
+    if (referer) {
+      try {
+        const url = new URL(referer);
+        basePath = url.pathname.replace('/login', ''); // /admin-secret
+      } catch(e) {}
+    }
     
     if (password === adminPassword) {
       const cookieStore = await cookies();
@@ -24,9 +37,9 @@ export default async function AdminLoginPage({
         secure: process.env.NODE_ENV === "production",
         maxAge: 60 * 60 * 24 * 7 // 7일 유지
       });
-      redirect("/admin");
+      redirect(basePath);
     } else {
-      redirect("/admin/login?error=1");
+      redirect(`${basePath}/login?error=1`);
     }
   }
 

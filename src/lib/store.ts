@@ -37,6 +37,12 @@ export interface SiteSettings {
   siteDescription?: string;
   siteKeywords?: string;
   ogImageUrl?: string;
+  
+  // 기능 개선 항목
+  adminPath?: string;
+  artistFields?: string[];
+  noteCategories?: string[];
+  adminPassword?: string;
 }
 
 export interface Inquiry {
@@ -192,7 +198,14 @@ export async function getSiteSettings(): Promise<Record<string, any>> {
     }
   });
   
-  return settings;
+  const defaultSettings = {
+    adminPath: "admin",
+    adminPassword: "tntmusic123",
+    artistFields: ["성악", "뮤지컬", "기타"],
+    noteCategories: ["Notice", "보이스 랩", "오디션 인사이드", "아티스트 인터뷰", "공연 리뷰"]
+  };
+  
+  return { ...defaultSettings, ...settings };
 }
 
 export async function updateSiteSettings(settingsMap: Record<string, any>) {
