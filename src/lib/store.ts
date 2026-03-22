@@ -340,6 +340,24 @@ export async function deleteNote(id: string) {
   if (error) console.error("delete note error:", error);
 }
 
+export async function updateNote(id: string, note: Partial<Omit<Note, "id" | "createdAt">>) {
+  const updateData: any = {};
+  if (note.title !== undefined) updateData.title = note.title;
+  if (note.category !== undefined) updateData.category = note.category;
+  if (note.content !== undefined) updateData.content = note.content;
+  if (note.coverImageUrl !== undefined) updateData.cover_image_url = note.coverImageUrl;
+
+  const { error } = await supabase
+    .from("notes")
+    .update(updateData)
+    .eq("id", id);
+
+  if (error) {
+    console.error("update note error:", error);
+    throw error;
+  }
+}
+
 // ---- Artists ----
 
 export async function getArtists(): Promise<Artist[]> {
@@ -379,6 +397,24 @@ export async function addArtist(artist: Omit<Artist, "id" | "createdAt">) {
 export async function deleteArtist(id: string) {
   const { error } = await supabase.from("artists").delete().eq("id", id);
   if (error) console.error("delete artist error:", error);
+}
+
+export async function updateArtist(id: string, artist: Partial<Omit<Artist, "id" | "createdAt">>) {
+  const updateData: any = {};
+  if (artist.name !== undefined) updateData.name = artist.name;
+  if (artist.role !== undefined) updateData.role = artist.role;
+  if (artist.bio !== undefined) updateData.bio = artist.bio;
+  if (artist.imageUrl !== undefined) updateData.image_url = artist.imageUrl;
+
+  const { error } = await supabase
+    .from("artists")
+    .update(updateData)
+    .eq("id", id);
+
+  if (error) {
+    console.error("update artist error:", error);
+    throw error;
+  }
 }
 
 // ---- Storage ----

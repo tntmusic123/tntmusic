@@ -115,11 +115,13 @@ export default function BookingForm() {
             <CardHeader>
               <CardTitle className="text-sm text-primary">입금 안내</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <p><strong className="text-foreground">은행:</strong> OO은행</p>
-              <p><strong className="text-foreground">계좌번호:</strong> 000-000-000000</p>
-              <p><strong className="text-foreground">예금주:</strong> TNT Music</p>
-              <p className="text-xs text-destructive mt-3">* 24시간 내 입금 확인이 되지 않으면 예약이 자동 취소됩니다.</p>
+            <CardContent className="space-y-4 text-sm text-foreground/70">
+              <p><strong className="text-foreground">은행:</strong> 우리은행</p>
+              <p><strong className="text-foreground">계좌번호:</strong> 1005-103-980558</p>
+              <p><strong className="text-foreground">예금주:</strong> 최찬양(티엔티뮤직)</p>
+              <p className="mt-4 text-xs italic text-muted-foreground border-t border-border pt-4">
+                * 24시간 내 입금 확인이 되지 않으면 예약이 자동 취소됩니다.
+              </p>
             </CardContent>
           </Card>
           <Link href="/studio">

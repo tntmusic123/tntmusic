@@ -23,11 +23,22 @@ const contactSchema = z.object({
 
 type ContactFormData = z.infer<typeof contactSchema>;
 
-import { addInquiry } from "@/lib/store";
+import { addInquiry, getSiteSettings } from "@/lib/store";
+import { useEffect } from "react";
 import { sendAdminNotification } from "@/app/actions/email";
 
 export default function ContactPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [settings, setSettings] = useState<any>({});
+
+  useEffect(() => {
+    getSiteSettings().then(setSettings);
+  }, []);
+
+  const businessPhone = settings.contactPhone || "010-2561-8636";
+  const businessEmail = settings.contactEmail || "tntmusic@kakao.com";
+  const businessAddress = settings.contactAddress || "서울특별시 강남구 논현로12길 19-6 우도빌딩 B1";
+  const businessBank = settings.bankInfo || "우리은행 1005-103-980558 (최찬양)";
 
   const {
     register,
@@ -107,7 +118,7 @@ export default function ContactPage() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="phone">연락처 <span className="text-destructive">*</span></Label>
-                      <Input id="phone" placeholder="010-2561-8636" {...register("phone")} />
+                      <Input id="phone" placeholder={businessPhone} {...register("phone")} />
                       {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
                     </div>
                   </div>
@@ -166,7 +177,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="text-xs text-white/40 mb-1 tracking-wider uppercase">주소</p>
-                      <p className="text-sm text-white/70">서울특별시 강남구 논현로12길 19-6 우도빌딩 B1</p>
+                      <p className="text-sm text-white/70">{businessAddress}</p>
                     </div>
                   </div>
 
@@ -176,7 +187,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="text-xs text-white/40 mb-1 tracking-wider uppercase">전화</p>
-                      <p className="text-sm text-white/70">010-2561-8636</p>
+                      <p className="text-sm text-white/70">{businessPhone}</p>
                     </div>
                   </div>
 
@@ -186,7 +197,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="text-xs text-white/40 mb-1 tracking-wider uppercase">이메일</p>
-                      <p className="text-sm text-white/70">tntmusic@kakao.com</p>
+                      <p className="text-sm text-white/70">{businessEmail}</p>
                     </div>
                   </div>
 
@@ -228,7 +239,7 @@ export default function ContactPage() {
             <h2 className="text-3xl font-bold text-foreground mb-4 flex items-center justify-center gap-2">
               <MapPin className="h-6 w-6 text-primary" /> 오시는 길
             </h2>
-            <p className="text-muted-foreground">서울특별시 강남구 논현로12길 19-6 우도빌딩 지하 1층</p>
+            <p className="text-muted-foreground">{businessAddress}</p>
           </div>
           <div className="rounded-2xl overflow-hidden border border-border shadow-lg h-[400px] sm:h-[500px] w-full relative">
             <iframe

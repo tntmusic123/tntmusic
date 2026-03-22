@@ -69,6 +69,9 @@ export default function AdminPage() {
   const [artistForm, setArtistForm] = useState({ name: "", role: "성악", bio: "", imageUrl: "" });
   const [isUploadingArtistImage, setIsUploadingArtistImage] = useState(false);
   const [isSubmittingArtist, setIsSubmittingArtist] = useState(false);
+
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editingArtistId, setEditingArtistId] = useState<string | null>(null);
   
   const [previewUrl, setPreviewUrl] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -271,19 +274,49 @@ export default function AdminPage() {
     }
 
     setIsSubmittingNote(true);
-    await addNote({
-      title: noteForm.title,
-      category: noteForm.category,
-      content: noteForm.content,
-      coverImageUrl: noteForm.coverUrl
+    try {
+      const { addNote, updateNote } = await import("@/lib/store");
+      if (editingNoteId) {
+        await updateNote(editingNoteId, {
+          title: noteForm.title,
+          category: noteForm.category,
+          content: noteForm.content,
+          coverImageUrl: noteForm.coverUrl
+        });
+        toast.success("노트가 수정되었습니다.");
+      } else {
+        await addNote({
+          title: noteForm.title,
+          category: noteForm.category,
+          content: noteForm.content,
+          coverImageUrl: noteForm.coverUrl
+        });
+        toast.success("새 노트가 작성되었습니다.");
+      }
+      
+      const updated = await getNotes();
+      setNotes(updated);
+      setIsSubmittingNote(false);
+      setIsComposingNote(false);
+      setEditingNoteId(null);
+      setNoteForm({ title: "", category: "Notice", content: "", coverUrl: "" });
+    } catch (err) {
+      toast.error("저장에 실패했습니다.");
+      setIsSubmittingNote(false);
+    }
+  };
+
+  const handleNoteEdit = (note: Note) => {
+    setEditingNoteId(note.id);
+    setNoteForm({
+      title: note.title,
+      category: note.category,
+      content: note.content,
+      coverUrl: note.coverImageUrl || ""
     });
-    
-    const updated = await getNotes();
-    setNotes(updated);
-    setIsSubmittingNote(false);
-    setIsComposingNote(false);
-    setNoteForm({ title: "", category: "Notice", content: "", coverUrl: "" });
-    toast.success("새 노트가 작성되었습니다.");
+    setIsComposingNote(true);
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleNoteDelete = async (id: string) => {
@@ -315,39 +348,50 @@ export default function AdminPage() {
       return;
     }
     
-    // 1. Optimistic Update
-    const optimisticArtist: Artist = {
-      id: `temp-${Date.now()}`,
-      name: artistForm.name,
-      role: artistForm.role,
-      bio: artistForm.bio,
-      imageUrl: artistForm.imageUrl,
-      createdAt: new Date().toISOString()
-    };
-    
-    setArtists(prev => [optimisticArtist, ...prev]);
-    setIsComposingArtist(false);
-    setArtistForm({ name: "", role: "성악", bio: "", imageUrl: "" });
-    toast.success("새 아티스트가 등록되었습니다.");
-
-    // 2. Background Network Request
+    setIsSubmittingArtist(true);
     try {
-      await addArtist({
-        name: optimisticArtist.name,
-        role: optimisticArtist.role,
-        bio: optimisticArtist.bio,
-        imageUrl: optimisticArtist.imageUrl
-      });
+      const { addArtist, updateArtist } = await import("@/lib/store");
+      if (editingArtistId) {
+        await updateArtist(editingArtistId, {
+          name: artistForm.name,
+          role: artistForm.role,
+          bio: artistForm.bio,
+          imageUrl: artistForm.imageUrl
+        });
+        toast.success("아티스트 정보가 수정되었습니다.");
+      } else {
+        await addArtist({
+          name: artistForm.name,
+          role: artistForm.role,
+          bio: artistForm.bio,
+          imageUrl: artistForm.imageUrl
+        });
+        toast.success("새 아티스트가 등록되었습니다.");
+      }
       
       const updated = await getArtists();
       setArtists(updated);
+      setIsComposingArtist(false);
+      setEditingArtistId(null);
+      setArtistForm({ name: "", role: "성악", bio: "", imageUrl: "" });
     } catch (err: any) {
       console.error(err);
       toast.error(`저장 실패: ${err.message || "오류가 발생했습니다."}`);
-      // Revert on failure
-      const updated = await getArtists();
-      setArtists(updated);
+    } finally {
+      setIsSubmittingArtist(false);
     }
+  };
+
+  const handleArtistEdit = (artist: Artist) => {
+    setEditingArtistId(artist.id);
+    setArtistForm({
+      name: artist.name,
+      role: artist.role,
+      bio: artist.bio,
+      imageUrl: artist.imageUrl || ""
+    });
+    setIsComposingArtist(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleArtistDelete = async (id: string) => {
@@ -997,11 +1041,32 @@ export default function AdminPage() {
                 </div>
                 블로그 노트 관리
               </h2>
-              {!isComposingNote && (
-                <Button onClick={() => setIsComposingNote(true)} className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(200,160,80,0.4)] gap-2 h-10 px-5 rounded-xl font-bold transition-all hover:scale-105">
-                  <Plus className="h-4 w-4" /> 새 노트 작성
+              <div className="flex gap-3">
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    const newCat = prompt("새 카테고리 이름을 입력하세요:");
+                    if (newCat) {
+                      const updated = [...(settings.noteCategories || []), newCat];
+                      setSettings({ ...settings, noteCategories: updated });
+                      updateSiteSettings({ noteCategories: updated });
+                      toast.success("카테고리가 추가되었습니다.");
+                    }
+                  }}
+                  className="bg-slate-900 border-slate-700 text-slate-300 hover:text-white h-10 px-4 rounded-xl text-xs"
+                >
+                  <Settings className="h-3.5 w-3.5 mr-2" /> 카테고리 편집
                 </Button>
-              )}
+                {!isComposingNote && (
+                  <Button onClick={() => {
+                    setIsComposingNote(true);
+                    setEditingNoteId(null);
+                    setNoteForm({ title: "", category: settings.noteCategories?.[0] || "Notice", content: "", coverUrl: "" });
+                  }} className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(200,160,80,0.4)] gap-2 h-10 px-5 rounded-xl font-bold transition-all hover:scale-105">
+                    <Plus className="h-4 w-4" /> 새 노트 작성
+                  </Button>
+                )}
+              </div>
             </div>
 
             {isComposingNote ? (
@@ -1102,9 +1167,12 @@ export default function AdminPage() {
                   </div>
 
                   <div className="flex gap-3 justify-end pt-6 border-t border-slate-800/50">
-                     <Button variant="ghost" onClick={() => setIsComposingNote(false)} className="text-slate-400 hover:text-white px-6">취소</Button>
+                     <Button variant="ghost" onClick={() => {
+                       setIsComposingNote(false);
+                       setEditingNoteId(null);
+                     }} className="text-slate-400 hover:text-white px-6">취소</Button>
                      <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-transform" disabled={isSubmittingNote} onClick={submitNote}>
-                       {isSubmittingNote ? "등록 중..." : "노트 발행하기"}
+                       {isSubmittingNote ? "처리 중..." : (editingNoteId ? "노트 수정하기" : "노트 발행하기")}
                      </Button>
                   </div>
                 </CardContent>
@@ -1144,14 +1212,22 @@ export default function AdminPage() {
                             <h3 className="font-bold text-white text-lg leading-tight mb-3 group-hover:text-primary transition-colors line-clamp-2">{note.title}</h3>
                             <p className="text-sm text-slate-400 line-clamp-2 leading-relaxed">{note.content}</p>
                           </div>
-                          <div className="flex justify-end mt-6 pt-4 border-t border-slate-800/60 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
+                          <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-800/60 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg"
+                              onClick={() => handleNoteEdit(note)}
+                            >
+                              수정
+                            </Button>
                             <Button 
                               variant="ghost" 
                               size="sm" 
                               className="h-8 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg"
                               onClick={() => handleNoteDelete(note.id)}
                             >
-                              <Trash2 className="h-4 w-4 mr-2" /> 삭제
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </CardContent>
@@ -1174,11 +1250,32 @@ export default function AdminPage() {
                 </div>
                 소속 아티스트 데이터베이스
               </h2>
-              {!isComposingArtist && (
-                <Button onClick={() => setIsComposingArtist(true)} className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(200,160,80,0.4)] gap-2 h-10 px-5 rounded-xl font-bold transition-all hover:scale-105">
-                  <Plus className="h-4 w-4" /> 신규 아티스트 등록
+              <div className="flex gap-3">
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    const newField = prompt("새 활동 분야를 입력하세요:");
+                    if (newField) {
+                      const updated = [...(settings.artistFields || []), newField];
+                      setSettings({ ...settings, artistFields: updated });
+                      updateSiteSettings({ artistFields: updated });
+                      toast.success("활동 분야가 추가되었습니다.");
+                    }
+                  }}
+                  className="bg-slate-900 border-slate-700 text-slate-300 hover:text-white h-10 px-4 rounded-xl text-xs"
+                >
+                  <Settings className="h-3.5 w-3.5 mr-2" /> 분야 편집
                 </Button>
-              )}
+                {!isComposingArtist && (
+                  <Button onClick={() => {
+                    setIsComposingArtist(true);
+                    setEditingArtistId(null);
+                    setArtistForm({ name: "", role: settings.artistFields?.[0] || "성악", bio: "", imageUrl: "" });
+                  }} className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(200,160,80,0.4)] gap-2 h-10 px-5 rounded-xl font-bold transition-all hover:scale-105">
+                    <Plus className="h-4 w-4" /> 신규 아티스트 등록
+                  </Button>
+                )}
+              </div>
             </div>
 
             {isComposingArtist ? (
@@ -1262,9 +1359,12 @@ export default function AdminPage() {
                   </div>
 
                   <div className="flex gap-3 justify-end pt-6 border-t border-slate-800/50">
-                     <Button variant="ghost" onClick={() => setIsComposingArtist(false)} className="text-slate-400 hover:text-white px-6">등록 취소</Button>
+                     <Button variant="ghost" onClick={() => {
+                       setIsComposingArtist(false);
+                       setEditingArtistId(null);
+                     }} className="text-slate-400 hover:text-white px-6">등록 취소</Button>
                      <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-transform" disabled={isSubmittingArtist} onClick={submitArtist}>
-                       {isSubmittingArtist ? "등록 중..." : "프로필 등록하기"}
+                       {isSubmittingArtist ? "처리 중..." : (editingArtistId ? "정보 수정하기" : "프로필 등록하기")}
                      </Button>
                   </div>
                 </CardContent>
@@ -1304,7 +1404,14 @@ export default function AdminPage() {
                           </div>
                         </div>
 
-                        <div className="absolute top-3 right-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 delay-100">
+                        <div className="absolute top-3 right-3 flex gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 delay-100">
+                           <Button 
+                             size="icon" 
+                             className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md shadow-xl border border-white/20"
+                             onClick={() => handleArtistEdit(artist)}
+                           >
+                             <Settings className="h-4 w-4 text-white" />
+                           </Button>
                            <Button 
                              variant="destructive" 
                              size="icon" 
