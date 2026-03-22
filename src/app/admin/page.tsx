@@ -495,12 +495,12 @@ export default function AdminPage() {
         </header>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8 relative custom-scrollbar">
-          <div className="max-w-6xl mx-auto pb-32">
+          <div className="max-w-[1400px] mx-auto pb-32">
 
         {/* Settings Tab */}
         {activeTab === "settings" && (
           <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
-            <div className="flex justify-between items-center bg-slate-900/40 p-5 rounded-2xl border border-slate-800/80 backdrop-blur-md shadow-xl sticky top-20 z-20">
+            <div className="flex justify-between items-center bg-slate-900/40 p-5 rounded-2xl border border-slate-800/80 shadow-xl">
               <div>
                 <h2 className="text-2xl font-bold text-white flex items-center gap-3 tracking-tight">
                   <div className="p-2.5 bg-primary/20 rounded-xl border border-primary/30">
@@ -881,7 +881,7 @@ export default function AdminPage() {
                         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                         .map((r) => (
                           <tr key={r.id} className="hover:bg-slate-800/40 transition-colors group">
-                            <td className="px-6 py-6 align-top">
+                            <td className="px-8 py-6 align-top">
                               <div className="flex flex-col">
                                 <span className="font-bold text-slate-200 text-base tracking-tight">{r.name}</span>
                                 <span className="text-slate-400 flex items-center gap-1.5 mt-1.5 text-xs font-medium">
@@ -894,7 +894,7 @@ export default function AdminPage() {
                                 )}
                               </div>
                             </td>
-                            <td className="px-6 py-6 align-top">
+                            <td className="px-8 py-6 align-top">
                               <div className="flex flex-col gap-3">
                                 <span className="font-semibold text-slate-200 flex items-center gap-2 bg-slate-800/50 w-max px-3 py-1.5 rounded-lg border border-slate-700/50">
                                   <CalendarDays className="w-4 h-4 text-primary" /> {r.date}
@@ -908,7 +908,7 @@ export default function AdminPage() {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-6 py-6 align-top">
+                            <td className="px-8 py-6 align-top">
                               <span className={`text-[11px] px-3 py-1.5 rounded-full font-bold tracking-wide shadow-sm flex items-center w-max gap-2 ${
                                 r.status === "pending" ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20" :
                                 r.status === "confirmed" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
@@ -920,7 +920,7 @@ export default function AdminPage() {
                                 {statusLabel(r.status)}
                               </span>
                             </td>
-                            <td className="px-6 py-6 text-right align-top">
+                            <td className="px-8 py-6 text-right align-top">
                               <div className="flex items-center justify-end gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
                                 {r.status === "pending" && (
                                   <>
@@ -988,15 +988,15 @@ export default function AdminPage() {
                   <table className="w-full text-sm text-left">
                     <thead className="text-xs text-slate-400 uppercase bg-slate-900/90 border-b border-slate-800">
                       <tr>
-                        <th className="px-6 py-5 font-semibold tracking-wider">고객 정보</th>
-                        <th className="px-6 py-5 font-semibold tracking-wider">문의 내용</th>
-                        <th className="px-6 py-5 font-semibold tracking-wider">접수일</th>
+                        <th className="px-8 py-5 font-semibold tracking-wider">고객 정보</th>
+                        <th className="px-8 py-5 font-semibold tracking-wider w-1/2">문의 내용</th>
+                        <th className="px-8 py-5 font-semibold tracking-wider">접수일</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/50">
                       {inquiries.map((inq) => (
                         <tr key={inq.id} className="hover:bg-slate-800/40 transition-colors group">
-                          <td className="px-6 py-6 align-top">
+                          <td className="px-8 py-6 align-top">
                             <div className="flex flex-col">
                               <span className="font-bold text-slate-200 text-base tracking-tight">{inq.name}</span>
                               <span className="text-slate-400 flex items-center gap-1.5 mt-1.5 text-xs">
@@ -1006,8 +1006,8 @@ export default function AdminPage() {
                               <div className="mt-2 text-[10px] w-max px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">{inq.type}</div>
                             </div>
                           </td>
-                          <td className="px-6 py-6 align-top">
-                            <div className="max-w-md">
+                          <td className="px-8 py-6 align-top">
+                            <div className="w-full">
                               {inq.message ? (
                                 <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">{inq.message}</p>
                               ) : (
@@ -1018,7 +1018,7 @@ export default function AdminPage() {
                               )}
                             </div>
                           </td>
-                          <td className="px-6 py-6 align-top whitespace-nowrap text-slate-500 text-xs">
+                          <td className="px-8 py-6 align-top whitespace-nowrap text-slate-500 text-xs">
                             {new Date(inq.createdAt).toLocaleString()}
                           </td>
                         </tr>
@@ -1310,11 +1310,12 @@ export default function AdminPage() {
                     </div>
                     <div className="md:col-span-2 space-y-2">
                        <Label className="text-xs text-slate-400 font-bold uppercase tracking-wider">아티스트 소개 및 세부 포지션 (선택)</Label>
-                       <Input 
-                         placeholder="예: 소프라노, 테너, 피아니스트 등" 
+                       <Textarea 
+                         placeholder="활동 경력, 주요 작품, 세부 전공 분야(소프라노, 테너, 피아니스트 등)를 입력하세요." 
+                         rows={5}
                          value={artistForm.bio}
-                         onChange={(e) => setArtistForm(prev => ({...prev, bio: e.target.value}))}
-                         className="bg-slate-950/50 border-slate-700/50 text-white h-12 focus-visible:ring-primary/50 text-base placeholder:text-slate-600 rounded-xl"
+                         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setArtistForm(prev => ({...prev, bio: e.target.value}))}
+                         className="bg-slate-950/50 border-slate-700/50 text-white focus-visible:ring-primary/50 text-base placeholder:text-slate-600 rounded-xl leading-relaxed custom-scrollbar"
                        />
                     </div>
                   </div>
