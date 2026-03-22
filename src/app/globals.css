@@ -89,82 +89,66 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* TNT Brand Colors */
-  --color-gold: #B8860B;
-  --color-gold-light: #D4A843;
-  --color-gold-dark: #8B6508;
-  --color-gold-50: #FBF7ED;
-  --color-gold-100: #F5EBCC;
-  --color-gold-200: #EDDA9E;
-  --color-gold-300: #E0C46A;
-  --color-gold-400: #D4A843;
-  --color-gold-500: #B8860B;
-  --color-gold-600: #9A7109;
-  --color-gold-700: #7A5907;
-  --color-navy: #1A1A2E;
-  --color-navy-light: #2D2D4A;
-  --color-navy-dark: #0F0F1A;
-  --color-navy-50: #E8E8EF;
-  --color-navy-100: #C5C5D6;
-  --color-navy-200: #9E9EBA;
-  --color-navy-300: #6D6D8F;
-  --color-navy-400: #464668;
-  --color-navy-500: #2D2D4A;
-  --color-navy-600: #1A1A2E;
-  --color-navy-700: #0F0F1A;
+  /* TNT Brand Colors - Original Navy & Gold */
+  --color-navy: #0A1229;
+  --color-navy-dark: #070B1A;
+  --color-navy-light: #121D3D;
+  --color-gold: #F59E0B;
+  --color-gold-light: #FBBF24;
+  --color-gold-dark: #B45309;
 
   --font-pretendard: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 /* ========================================
-   Light Mode – TNT Music (Gold & Navy)
+   Light Mode – TNT Music (Original Gold & White)
    ======================================== */
 :root {
   --radius: 0.625rem;
   --background: #ffffff;
-  --foreground: #1A1A2E;
+  --foreground: #020817;
   --card: #ffffff;
-  --card-foreground: #1A1A2E;
+  --card-foreground: #020817;
   --popover: #ffffff;
-  --popover-foreground: #1A1A2E;
-  --primary: #B8860B;
+  --popover-foreground: #020817;
+  --primary: #F59E0B;
   --primary-foreground: #ffffff;
-  --secondary: #F5F5F7;
-  --secondary-foreground: #1A1A2E;
-  --muted: #F5F5F7;
-  --muted-foreground: #6D6D8F;
-  --accent: #F5F5F7;
-  --accent-foreground: #1A1A2E;
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --border: #E8E8EF;
-  --input: #E8E8EF;
-  --ring: #B8860B;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #020817;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #020817;
+  --destructive: #ef4444;
+  --destructive-foreground: #f8fafc;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #F59E0B;
 }
 
 /* ========================================
-   Dark Mode – TNT Music (Navy Based)
+   Dark Mode – TNT Music (Premium Navy & Gold)
    ======================================== */
 .dark {
-  --background: #0F0F1A;
-  --foreground: #E8E8EF;
-  --card: #1A1A2E;
-  --card-foreground: #E8E8EF;
-  --popover: #1A1A2E;
-  --popover-foreground: #E8E8EF;
-  --primary: #D4A843;
-  --primary-foreground: #0F0F1A;
-  --secondary: #2D2D4A;
-  --secondary-foreground: #E8E8EF;
-  --muted: #2D2D4A;
-  --muted-foreground: #9E9EBA;
-  --accent: #2D2D4A;
-  --accent-foreground: #E8E8EF;
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --border: rgba(255, 255, 255, 0.1);
-  --input: rgba(255, 255, 255, 0.15);
-  --ring: #D4A843;
+  --background: #020817;
+  --foreground: #f8fafc;
+  --card: #020817;
+  --card-foreground: #f8fafc;
+  --popover: #020817;
+  --popover-foreground: #f8fafc;
+  --primary: #F59E0B;
+  --primary-foreground: #020817;
+  --secondary: #1e293b;
+  --secondary-foreground: #f8fafc;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #1e293b;
+  --accent-foreground: #f8fafc;
+  --destructive: #ef4444;
+  --destructive-foreground: #f8fafc;
+  --border: #1e293b;
+  --input: #1e293b;
+  --ring: #F59E0B;
 }
 
 /* ========================================
@@ -189,18 +173,18 @@
    TNT Custom Utilities
    ======================================== */
 .text-gradient-gold {
-  background: linear-gradient(135deg, #D4A843, #B8860B, #8B6508);
+  background: linear-gradient(135deg, #D4AF37, #BFA15D, #8B6E32);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.bg-gradient-navy {
-  background: linear-gradient(135deg, #0F0F1A, #1A1A2E, #2D2D4A);
+.bg-gradient-dark {
+  background: linear-gradient(135deg, #0A0A0A, #121212, #1C1C1C);
 }
 
 .bg-gradient-gold {
-  background: linear-gradient(135deg, #8B6508, #B8860B, #D4A843);
+  background: linear-gradient(135deg, #8B6E32, #BFA15D, #D4AF37);
 }
 
 .glass {

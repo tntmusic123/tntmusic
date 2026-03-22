@@ -1,6 +1,8 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import { format } from "date-fns";
-import { getNotes } from "@/lib/store";
+import { getNotes, getSiteSettings } from "@/lib/store";
 import { FilterBar } from "@/components/FilterBar";
 import { Suspense } from "react";
 import type { Metadata } from "next";
@@ -10,7 +12,17 @@ export const metadata: Metadata = {
   description: "TNT Music 노트 - 성악, 뮤지컬, 보이스 트레이닝에 대한 소소한 이야기를 전합니다.",
 };
 
-const categories = ["전체", "보이스 랩", "오디션 인사이드", "아티스트 인터뷰", "공연 리뷰", "Notice"];
+  const siteSettings = await getSiteSettings();
+  const categories = ["전체", ...(siteSettings.noteCategories || ["Notice", "보이스 랩", "오디션 인사이드", "아티스트 인터뷰", "공연 리뷰"])];
+
+const safeFormatDate = (dateStr: string | undefined | null) => {
+  if (!dateStr) return "N/A";
+  try {
+    return format(new Date(dateStr), "yyyy. MM. dd");
+  } catch (e) {
+    return "N/A";
+  }
+};
 
 // Next.js 서버 컴포넌트는 페이지 컴포넌트에 async를 사용할 수 있습니다.
 export default async function NotePage({ 
@@ -32,7 +44,7 @@ export default async function NotePage({
       {/* Hero */}
       <section className="relative pt-32 pb-20 bg-navy overflow-hidden" id="journal-hero">
         <div className="absolute inset-0 bg-gradient-to-b from-navy-dark to-navy opacity-80" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-gold/3 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-primary/3 rounded-full blur-3xl" />
         <div className="relative z-10 mx-auto max-w-5xl px-6 text-center">
           <span className="inline-block text-xs font-medium tracking-[0.3em] text-gold uppercase mb-4">Note</span>
           <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-6">
@@ -79,13 +91,13 @@ export default async function NotePage({
                       </span>
                     </div>
                   ) : (
-                    <div className="h-56 bg-navy relative overflow-hidden flex items-center justify-center">
-                      <div className="absolute inset-0 bg-gradient-to-br from-navy-dark/80 to-navy-light/80 transition-all group-hover:opacity-70" />
-                      <svg className="w-10 h-10 text-gold/20 relative z-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                    <div className="h-56 bg-background relative overflow-hidden flex items-center justify-center">
+                      <div className="absolute inset-0 bg-gradient-dark opacity-80 transition-all group-hover:opacity-70" />
+                      <svg className="w-10 h-10 text-primary/20 relative z-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
                         <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                       </svg>
-                      <span className="absolute top-4 left-4 text-[10px] px-3 py-1 rounded-full bg-gold/90 text-white font-bold z-10 uppercase tracking-wider">
+                      <span className="absolute top-4 left-4 text-[10px] px-3 py-1 rounded-full bg-primary/90 text-background font-bold z-10 uppercase tracking-wider">
                         {post.category}
                       </span>
                     </div>
@@ -93,7 +105,7 @@ export default async function NotePage({
 
                   <div className="p-8 flex flex-col flex-1">
                     <time className="text-xs text-muted-foreground font-medium uppercase tracking-widest">
-                      {format(new Date(post.createdAt), "yyyy. MM. dd")}
+                      {safeFormatDate(post.createdAt)}
                     </time>
                     <h3 className="text-xl font-bold text-foreground mt-3 mb-4 group-hover:text-gold transition-colors leading-tight">
                       {post.title}

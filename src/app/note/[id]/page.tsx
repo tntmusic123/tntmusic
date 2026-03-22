@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import { format } from "date-fns";
 import { getNoteById, getNotes } from "@/lib/store";
@@ -10,6 +12,15 @@ import type { Metadata, ResolvingMetadata } from "next";
 
 type Props = {
   params: Promise<{ id: string }>;
+};
+
+const safeFormatDate = (dateStr: string | undefined | null) => {
+  if (!dateStr) return "N/A";
+  try {
+    return format(new Date(dateStr), "yyyy. MM. dd");
+  } catch (e) {
+    return "N/A";
+  }
 };
 
 export async function generateMetadata(
@@ -60,7 +71,7 @@ export default async function NoteDetailPage({ params }: Props) {
             </h1>
             <time className="text-sm text-white/40 flex items-center justify-center gap-2 font-medium">
               <CalendarDays className="h-4 w-4" />
-              {format(new Date(safeNote.createdAt), "yyyy. MM. dd")}
+              {safeFormatDate(safeNote.createdAt)}
             </time>
           </div>
         </div>
@@ -79,7 +90,34 @@ export default async function NoteDetailPage({ params }: Props) {
 
           {/* Content */}
           <div className="prose prose-invert prose-gold max-w-none text-foreground leading-loose prose-img:rounded-xl prose-img:border prose-img:border-border prose-a:text-gold hover:prose-a:text-gold-light">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown 
+              remarkPlugins={[remarkGfm]}
+              components={{
+                a: ({ node, ...props }) => {
+                  const href = props.href || "";
+                  const isYouTube = href.includes("youtube.com") || href.includes("youtu.be");
+                  if (isYouTube) {
+                    const videoId = href.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?/]+)/)?.[1];
+                    if (videoId) {
+                      return (
+                        <div className="aspect-video w-full my-8 rounded-2xl overflow-hidden shadow-2xl border border-border">
+                          <iframe
+                            width="100%"
+                            height="100%"
+                            src={`https://www.youtube.com/embed/${videoId}`}
+                            title="YouTube video player"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        </div>
+                      );
+                    }
+                  }
+                  return <a {...props} target="_blank" rel="noopener noreferrer" />;
+                }
+              }}
+            >
               {note.content}
             </ReactMarkdown>
           </div>
@@ -127,7 +165,7 @@ export default async function NoteDetailPage({ params }: Props) {
                         {otherNote.title}
                       </h3>
                       <time className="text-[10px] text-muted-foreground mt-2 block">
-                        {format(new Date(otherNote.createdAt), "yyyy. MM. dd")}
+                        {safeFormatDate(otherNote.createdAt)}
                       </time>
                     </div>
                   </div>

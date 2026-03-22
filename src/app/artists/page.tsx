@@ -1,5 +1,7 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
-import { getArtists } from "@/lib/store";
+import { getArtists, getSiteSettings } from "@/lib/store";
 import { FilterBar } from "@/components/FilterBar";
 import { Suspense } from "react";
 import type { Metadata } from "next";
@@ -23,6 +25,9 @@ export default async function ArtistsPage({
     artists = artists.filter(artist => artist.role === currentCategory);
   }
 
+  const siteSettings = await getSiteSettings();
+  const fields = ["전체", ...(siteSettings.artistFields || ["성악", "뮤지컬"])];
+
   return (
     <>
       {/* Hero */}
@@ -44,7 +49,7 @@ export default async function ArtistsPage({
       <section className="py-2 bg-background border-b border-border sticky top-[64px] z-30" id="artists-filter">
         <Suspense fallback={<div className="h-10" />}>
           <FilterBar 
-            categories={["전체", "성악", "뮤지컬"]} 
+            categories={fields} 
             currentCategory={currentCategory} 
             baseUrl="/artists" 
           />

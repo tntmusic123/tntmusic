@@ -89,7 +89,7 @@ export default async function AboutPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { icon: "🎵", title: "전문성", desc: "성악·뮤지컬 분야에 특화된 전문 공간과 네트워크를 제공합니다." },
+              { icon: "🎵", title: "전문성", desc: "클래식 분야에 특화된 전문 공간과 네트워크를 제공합니다." },
               { icon: "✨", title: "프리미엄", desc: "최고급 시설과 서비스로 아티스트의 퍼포먼스를 극대화합니다." },
               { icon: "🤝", title: "연결", desc: "아티스트와 무대를 연결하여 새로운 기회를 창출합니다." },
             ].map((value) => (

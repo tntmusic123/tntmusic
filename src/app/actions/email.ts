@@ -12,8 +12,8 @@ interface EmailPayload {
 export async function sendAdminNotification(payload: EmailPayload) {
   try {
     const { data, error } = await resend.emails.send({
-      // Resend 기본 테스트 도메인 발신자. 실제 운영 시 자체 도메인(예: no-reply@tntmusic.com) 인증 필요.
-      from: "TNT Music 알림 <onboarding@resend.dev>", 
+      // 도메인 인증 완료된 공식 발신자 주소
+      from: "TNT Music 알림 <info@tntmusic.kr>", 
       to: ["tntmusic@kakao.com", "cco1548@naver.com"],
       subject: `[TNT Music] ${payload.subject}`,
       html: `

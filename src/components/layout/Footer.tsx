@@ -48,52 +48,70 @@ export default function Footer() {
               className="h-9 w-auto mb-5"
             />
             <p className="text-sm text-white/50 leading-relaxed mb-6">
-              성악 · 뮤지컬 전문 연습실
-              <br />
-              아티스트 에이전시
+              클래식 전문 연습실
             </p>
             {/* Social Links */}
             <div className="flex gap-3">
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center w-9 h-9 rounded-full border border-white/10 text-white/40 transition-all hover:border-gold/50 hover:text-gold hover:bg-gold/5"
-                aria-label="Instagram"
-                id="social-instagram"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-                </svg>
-              </a>
-              <a
-                href="https://youtube.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center w-9 h-9 rounded-full border border-white/10 text-white/40 transition-all hover:border-gold/50 hover:text-gold hover:bg-gold/5"
-                aria-label="YouTube"
-                id="social-youtube"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.13C5.12 19.58 12 19.58 12 19.58s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.45z" />
-                  <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
-                </svg>
-              </a>
-              <a
-                href="https://blog.naver.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center w-9 h-9 rounded-full border border-white/10 text-white/40 transition-all hover:border-gold/50 hover:text-gold hover:bg-gold/5"
-                aria-label="Blog"
-                id="social-blog"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                </svg>
-              </a>
+              {settings.snsInstagram && (
+                <a
+                  href={settings.snsInstagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center w-9 h-9 rounded-full border border-white/10 text-white/40 transition-all hover:border-gold/50 hover:text-gold hover:bg-gold/5"
+                  aria-label="Instagram"
+                  id="social-instagram"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                  </svg>
+                </a>
+              )}
+              {settings.snsYoutube && (
+                <a
+                  href={settings.snsYoutube}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center w-9 h-9 rounded-full border border-white/10 text-white/40 transition-all hover:border-gold/50 hover:text-gold hover:bg-gold/5"
+                  aria-label="YouTube"
+                  id="social-youtube"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.13C5.12 19.58 12 19.58 12 19.58s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.45z" />
+                    <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
+                  </svg>
+                </a>
+              )}
+              {settings.snsBlog && (
+                <a
+                  href={settings.snsBlog}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center w-9 h-9 rounded-full border border-white/10 text-white/40 transition-all hover:border-gold/50 hover:text-gold hover:bg-gold/5"
+                  aria-label="Blog"
+                  id="social-blog"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                  </svg>
+                </a>
+              )}
+              {settings.snsKakao && (
+                <a
+                  href={settings.snsKakao}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center w-9 h-9 rounded-full border border-white/10 text-white/40 transition-all hover:border-gold/50 hover:text-gold hover:bg-gold/5"
+                  aria-label="Kakao"
+                  id="social-kakao"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-11.8 8.4 8.4 0 0 1 3.8.9l5.3-2.1z" />
+                  </svg>
+                </a>
+              )}
             </div>
           </div>
 

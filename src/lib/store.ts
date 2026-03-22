@@ -43,6 +43,11 @@ export interface SiteSettings {
   artistFields?: string[];
   noteCategories?: string[];
   adminPassword?: string;
+  partnerLogos?: string[];
+  snsInstagram?: string;
+  snsYoutube?: string;
+  snsBlog?: string;
+  snsKakao?: string;
 }
 
 export interface Inquiry {
@@ -63,6 +68,7 @@ export interface Note {
   category: string;
   content: string;
   coverImageUrl?: string;
+  isMainExposed: boolean;
   createdAt: string;
 }
 
@@ -202,7 +208,12 @@ export async function getSiteSettings(): Promise<Record<string, any>> {
     adminPath: "admin",
     adminPassword: "tntmusic123",
     artistFields: ["성악", "뮤지컬", "기타"],
-    noteCategories: ["Notice", "보이스 랩", "오디션 인사이드", "아티스트 인터뷰", "공연 리뷰"]
+    noteCategories: ["Notice", "보이스 랩", "오디션 인사이드", "아티스트 인터뷰", "공연 리뷰"],
+    partnerLogos: [],
+    snsInstagram: "",
+    snsYoutube: "",
+    snsBlog: "",
+    snsKakao: "",
   };
   
   return { ...defaultSettings, ...settings };
@@ -296,6 +307,7 @@ export async function getNotes(): Promise<Note[]> {
     category: d.category,
     content: d.content,
     coverImageUrl: d.cover_image_url,
+    isMainExposed: d.is_main_exposed || false,
     createdAt: d.created_at,
   }));
 }
@@ -318,17 +330,22 @@ export async function getNoteById(id: string): Promise<Note | null> {
     category: data.category,
     content: data.content,
     coverImageUrl: data.cover_image_url,
-    createdAt: data.created_at,
+    isMainExposed: data.is_main_exposed || false,
+    createdAt: data.created_at
   };
 }
 
 export async function addNote(note: Omit<Note, "id" | "createdAt">) {
-  const { error } = await supabase.from("notes").insert({
-    title: note.title,
-    category: note.category,
-    content: note.content,
-    cover_image_url: note.coverImageUrl || "",
-  });
+  const { data, error } = await supabase
+    .from("notes")
+    .insert([{
+      title: note.title,
+      category: note.category,
+      content: note.content,
+      cover_image_url: note.coverImageUrl,
+      is_main_exposed: note.isMainExposed || false,
+    }])
+    .select();
   if (error) {
     console.error("add note error:", error);
     throw error;
@@ -346,6 +363,7 @@ export async function updateNote(id: string, note: Partial<Omit<Note, "id" | "cr
   if (note.category !== undefined) updateData.category = note.category;
   if (note.content !== undefined) updateData.content = note.content;
   if (note.coverImageUrl !== undefined) updateData.cover_image_url = note.coverImageUrl;
+  if (note.isMainExposed !== undefined) updateData.is_main_exposed = note.isMainExposed;
 
   const { error } = await supabase
     .from("notes")
@@ -353,8 +371,8 @@ export async function updateNote(id: string, note: Partial<Omit<Note, "id" | "cr
     .eq("id", id);
 
   if (error) {
-    console.error("update note error:", error);
-    throw error;
+    console.error("update note error details:", error);
+    throw new Error(`노트 수정 중 오류가 발생했습니다: ${error.message}`);
   }
 }
 

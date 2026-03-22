@@ -241,7 +241,7 @@ export default function ContactPage() {
             </h2>
             <p className="text-muted-foreground">{businessAddress}</p>
           </div>
-          <div className="rounded-2xl overflow-hidden border border-border shadow-lg h-[400px] sm:h-[500px] w-full relative">
+          <div className="rounded-2xl overflow-hidden border border-border shadow-lg h-[400px] sm:h-[500px] w-full relative mb-12">
             <iframe
               src="https://maps.google.com/maps?q=37.475351,127.0490843&z=17&output=embed"
               width="100%"
@@ -252,6 +252,26 @@ export default function ContactPage() {
               referrerPolicy="no-referrer-when-downgrade"
               className="absolute inset-0 grayscale-[20%] contrast-[1.1]"
             />
+          </div>
+
+          {/* Detailed Map & Pricing Images */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-primary" /> 상세 약도 안내
+              </h3>
+              <div className="rounded-2xl overflow-hidden border border-border shadow-xl bg-white p-2">
+                <img src="/images/contact_map.png" alt="TNT Music 상세 약도" className="w-full h-auto" />
+              </div>
+            </div>
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary" /> 연습실 이용 및 요금 안내
+              </h3>
+              <div className="rounded-2xl overflow-hidden border border-border shadow-xl bg-white p-2">
+                <img src="/images/pricing_info.png" alt="TNT Music 이용 시간 및 금액" className="w-full h-auto" />
+              </div>
+            </div>
           </div>
         </div>
       </section>
