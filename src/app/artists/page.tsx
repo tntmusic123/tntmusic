@@ -69,8 +69,8 @@ export default async function ArtistsPage() {
                     <div className="absolute bottom-4 left-4 right-4 z-10 text-left">
                       <h3 className="text-xl font-bold text-white mb-2">{artist.name}</h3>
                       <div className="flex gap-2">
-                        {artist.voice && <span className="text-[11px] px-2 py-0.5 rounded-full bg-gold/20 text-gold-light border border-gold/30">{artist.voice}</span>}
-                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-white/80 border border-white/20">{artist.field}</span>
+                        {artist.bio && <span className="text-[11px] px-2 py-0.5 rounded-full bg-gold/20 text-gold-light border border-gold/30">{artist.bio}</span>}
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-white/80 border border-white/20">{artist.role}</span>
                       </div>
                     </div>
                   </div>
