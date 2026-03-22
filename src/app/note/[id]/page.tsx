@@ -45,29 +45,34 @@ export default async function NoteDetailPage({ params }: Props) {
 
   return (
     <>
-      <article className="pt-32 pb-20 bg-background min-h-screen">
-        <div className="mx-auto max-w-3xl px-6">
-          {/* Header */}
-          <header className="mb-10 text-center">
-            <span className="inline-block text-xs font-medium px-3 py-1 rounded-full bg-primary/10 text-primary mb-4">
-              {note.category}
+      <article className="bg-background min-h-screen">
+        {/* Header Hero Section */}
+        <div className="bg-navy pt-40 pb-20 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-navy-dark to-navy opacity-50" />
+          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-gold/5 rounded-full blur-[100px] -mr-32 -mt-32" />
+          
+          <div className="relative z-10 mx-auto max-w-3xl px-6 text-center">
+            <span className="inline-block text-[10px] font-bold px-3 py-1 rounded-full bg-gold/10 border border-gold/20 text-gold mb-6 uppercase tracking-widest">
+              {safeNote.category}
             </span>
-            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 leading-tight">
-              {note.title}
+            <h1 className="text-3xl sm:text-5xl font-bold text-white mb-6 leading-tight tracking-tight">
+              {safeNote.title}
             </h1>
-            <time className="text-sm text-muted-foreground flex items-center justify-center gap-2">
+            <time className="text-sm text-white/40 flex items-center justify-center gap-2 font-medium">
               <CalendarDays className="h-4 w-4" />
-              {format(new Date(note.createdAt), "yyyy. MM. dd")}
+              {format(new Date(safeNote.createdAt), "yyyy. MM. dd")}
             </time>
-          </header>
+          </div>
+        </div>
 
+        <div className="mx-auto max-w-3xl px-6 -mt-10 relative z-20">
           {/* Cover Image */}
-          {note.coverImageUrl && (
-            <div className="rounded-2xl overflow-hidden mb-12 bg-muted border border-border">
+          {safeNote.coverImageUrl && (
+            <div className="rounded-2xl overflow-hidden mb-16 bg-muted border border-border/50 shadow-2xl skew-y-1 transition-transform hover:skew-y-0 duration-700">
               <img
-                src={note.coverImageUrl}
-                alt={note.title}
-                className="w-full max-h-[500px] object-cover"
+                src={safeNote.coverImageUrl}
+                alt={safeNote.title}
+                className="w-full max-h-[600px] object-cover"
               />
             </div>
           )}
