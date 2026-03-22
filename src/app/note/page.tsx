@@ -65,9 +65,10 @@ export default async function NotePage({
               </div>
             ) : (
               posts.map((post) => (
-                <article
+                <Link
                   key={post.id}
-                  className="group rounded-2xl border border-border overflow-hidden transition-all hover:shadow-xl hover:border-gold/20 flex flex-col h-full"
+                  href={`/note/${post.id}`}
+                  className="group rounded-2xl border border-border overflow-hidden transition-all hover:shadow-xl hover:border-gold/20 flex flex-col h-full bg-card hover:-translate-y-1 duration-300"
                   id={`post-${post.id}`}
                 >
                   {post.coverImageUrl ? (
@@ -101,19 +102,16 @@ export default async function NotePage({
                       {post.content.length > 100 ? post.content.substring(0, 100).replace(/[#*`]/g, '') + "..." : post.content.replace(/[#*`]/g, '')}
                     </p>
                     <div className="mt-auto">
-                      <Link
-                        href={`/note/${post.id}`}
-                        className="inline-flex items-center gap-2 text-sm font-bold text-gold transition-all hover:gap-3 group/link"
-                      >
+                      <div className="inline-flex items-center gap-2 text-sm font-bold text-gold transition-all hover:gap-3 group/link">
                         자세히 보기
-                        <span className="w-6 h-px bg-gold/30 group-hover/link:w-10 transition-all" />
+                        <span className="w-6 h-px bg-gold/30 group-hover/link:w-10 transition-all font-normal" />
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <polyline points="12 5 19 12 12 19" />
                         </svg>
-                      </Link>
+                      </div>
                     </div>
                   </div>
-                </article>
+                </Link>
               ))
             )}
           </div>
