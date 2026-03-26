@@ -51,7 +51,11 @@ import {
   LogOut,
   Phone,
   Mail,
+  LayoutGrid,
+  Calendar as CalendarIcon,
 } from "lucide-react";
+import { DayPicker } from "react-day-picker";
+import "react-day-picker/style.css";
 
 type Tab = "settings" | "reservations" | "inquiries" | "notes" | "artists";
 
@@ -88,6 +92,8 @@ export default function AdminPage() {
   
   // Reservation Form State
   const [isComposingReservation, setIsComposingReservation] = useState(false);
+  const [resViewMode, setResViewMode] = useState<"list" | "month">("month");
+  const [resSelectedDate, setResSelectedDate] = useState<Date>(new Date());
   const [reservationForm, setReservationForm] = useState<Omit<Reservation, "id" | "createdAt">>({
     name: "", phone: "", date: format(new Date(), "yyyy-MM-dd"), timeSlots: [], message: "", roomType: "studio", status: "confirmed"
   });
@@ -1071,15 +1077,33 @@ export default function AdminPage() {
                 </div>
                 예약 관리 (Studio / Hall)
               </h2>
-              <Button 
-                onClick={() => {
-                  resetReservationForm();
-                  setIsComposingReservation(true);
-                }}
-                className="btn-gold rounded-xl px-6"
-              >
-                예약 직접 추가
-              </Button>
+              <div className="flex gap-3">
+                <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
+                  <button 
+                    onClick={() => setResViewMode("month")}
+                    className={`p-2 rounded-lg transition-all ${resViewMode === "month" ? "bg-slate-800 text-primary shadow-sm" : "text-slate-500 hover:text-slate-300"}`}
+                    title="월간 달력"
+                  >
+                    <CalendarIcon className="h-4 w-4" />
+                  </button>
+                  <button 
+                    onClick={() => setResViewMode("list")}
+                    className={`p-2 rounded-lg transition-all ${resViewMode === "list" ? "bg-slate-800 text-primary shadow-sm" : "text-slate-500 hover:text-slate-300"}`}
+                    title="전체 리스트"
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </button>
+                </div>
+                <Button 
+                  onClick={() => {
+                    resetReservationForm();
+                    setIsComposingReservation(true);
+                  }}
+                  className="btn-gold rounded-xl px-6"
+                >
+                  예약 직접 추가
+                </Button>
+              </div>
             </div>
 
             {isComposingReservation && (
@@ -1213,117 +1237,193 @@ export default function AdminPage() {
                 </CardContent>
               </Card>
             )}
-            {reservations.length === 0 ? (
-              <Card className="bg-slate-900/40 border-slate-800/80 shadow-2xl backdrop-blur-md">
-                <CardContent className="py-32 text-center flex flex-col items-center justify-center">
-                  <div className="w-20 h-20 rounded-2xl bg-slate-800/50 flex items-center justify-center mb-6 shadow-inner border border-slate-700/50">
-                    <CalendarDays className="h-10 w-10 text-slate-500" />
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-2 tracking-tight">접수된 예약이 없습니다</h3>
-                  <p className="text-slate-400 max-w-sm">신규 예약이 들어오면 이곳에서 승인 또는 거절 처리를 할 수 있습니다.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
-                <div className="overflow-x-auto custom-scrollbar">
-                  <table className="w-full text-sm text-left">
-                    <thead className="text-xs text-slate-400 uppercase bg-slate-900/90 border-b border-slate-800">
-                      <tr>
-                        <th className="px-6 py-5 font-semibold tracking-wider">장소</th>
-                        <th className="px-6 py-5 font-semibold tracking-wider">예약자 정보</th>
-                        <th className="px-6 py-5 font-semibold tracking-wider">일정 및 시간</th>
-                        <th className="px-6 py-5 font-semibold tracking-wider">상태</th>
-                        <th className="px-6 py-5 font-semibold tracking-wider text-right">관리</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/50">
-                      {reservations
-                        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                        .map((r) => (
-                          <tr key={r.id} className="hover:bg-slate-800/40 transition-colors group">
-                            <td className="px-8 py-6 align-top">
-                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-widest ${r.roomType === 'hall' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
+
+            {resViewMode === "month" ? (
+               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <Card className="lg:col-span-1 bg-slate-900/60 border-slate-800/80 shadow-2xl backdrop-blur-xl h-fit">
+                    <CardHeader className="border-b border-slate-800/50">
+                      <CardTitle className="text-sm text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2">
+                        <CalendarIcon className="h-4 w-4 text-primary" /> 예약 달력
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <DayPicker
+                        mode="single"
+                        selected={resSelectedDate}
+                        onSelect={(date) => date && setResSelectedDate(date)}
+                        locale={ko}
+                        className="mx-auto admin-daypicker"
+                        modifiers={{
+                          hasRes: reservations.map(r => new Date(r.date))
+                        }}
+                        modifiersStyles={{
+                          hasRes: { borderBottom: '3px solid #C8A050' }
+                        }}
+                      />
+                      <style jsx global>{`
+                        .admin-daypicker .rdp { --rdp-accent-color: #C8A050; --rdp-background-color: #1e293b; color: #cbd5e1; }
+                        .admin-daypicker .rdp-day_selected { background-color: #C8A050 !important; color: black !important; font-weight: bold; }
+                        .admin-daypicker .rdp-button:hover:not([disabled]):not(.rdp-day_selected) { background-color: #334155; }
+                      `}</style>
+                    </CardContent>
+                  </Card>
+
+                  <div className="lg:col-span-2 space-y-6">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                      <h3 className="text-xl font-bold text-white">
+                        {format(resSelectedDate, "yyyy년 MM월 dd일", { locale: ko })} 예약 현황
+                      </h3>
+                      <div className="flex gap-2">
+                         <span className="text-[10px] px-2 py-1 rounded bg-slate-800 text-slate-400 border border-slate-700">Studio / Hall 합계</span>
+                      </div>
+                    </div>
+
+                    {reservations.filter(r => r.date === format(resSelectedDate, "yyyy-MM-dd")).length === 0 ? (
+                      <div className="py-20 text-center bg-slate-900/40 border border-dashed border-slate-800 rounded-2xl">
+                        <p className="text-slate-500 font-medium">해당 날짜에 등록된 예약이 없습니다.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {reservations
+                          .filter(r => r.date === format(resSelectedDate, "yyyy-MM-dd"))
+                          .sort((a, b) => a.timeSlots[0].localeCompare(b.timeSlots[0]))
+                          .map(r => (
+                            <div key={r.id} className="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl hover:border-primary/50 transition-all group relative overflow-hidden">
+                              <div className={`absolute left-0 top-0 bottom-0 w-1 ${r.roomType === 'hall' ? 'bg-purple-500' : 'bg-blue-500'}`} />
+                              <div className="flex justify-between items-start mb-4">
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-widest ${r.roomType === 'hall' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
                                   {r.roomType || 'studio'}
-                               </span>
-                            </td>
-                            <td className="px-8 py-6 align-top">
-                              <div className="flex flex-col">
-                                <span className="font-bold text-slate-200 text-base tracking-tight">{r.name}</span>
-                                <span className="text-slate-400 flex items-center gap-1.5 mt-1.5 text-xs font-medium">
-                                  <Phone className="w-3 h-3 text-slate-500" /> {r.phone}
                                 </span>
+                                <div className="flex items-center gap-1">
+                                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                                    r.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-yellow-500/10 text-yellow-400'
+                                  }`}>
+                                    {r.status === 'confirmed' ? '승인' : '대기'}
+                                  </span>
+                                </div>
+                              </div>
+                              <h4 className="text-lg font-bold text-white mb-1">{r.name}</h4>
+                              <div className="flex items-center gap-2 text-slate-400 text-xs mb-3">
+                                <Phone className="w-3 h-3 text-slate-500" /> {r.phone}
+                              </div>
+                              <div className="flex flex-wrap gap-1 mb-4">
+                                {r.timeSlots.map(slot => (
+                                  <span key={slot} className="text-[10px] px-2 py-0.5 bg-slate-950 text-slate-300 rounded border border-slate-800 font-mono">
+                                    {slot.split(' - ')[0]}
+                                  </span>
+                                ))}
+                              </div>
+                              <div className="flex justify-end gap-2 pt-3 border-t border-slate-800/50">
+                                {r.status === 'pending' && (
+                                   <Button size="sm" onClick={() => handleStatusChange(r.id, 'confirmed')} className="h-7 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-[10px] px-3">승인</Button>
+                                )}
+                                <Button size="sm" variant="ghost" onClick={() => handleDelete(r.id)} className="h-7 text-slate-500 hover:text-red-400 hover:bg-red-500/10 text-[10px] px-2"><Trash2 className="h-3.5 w-3.5" /></Button>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+               </div>
+            ) : (
+              reservations.length === 0 ? (
+                <Card className="bg-slate-900/40 border-slate-800/80 shadow-2xl backdrop-blur-md">
+                  <CardContent className="py-32 text-center flex flex-col items-center justify-center">
+                    <div className="w-20 h-20 rounded-2xl bg-slate-800/50 flex items-center justify-center mb-6 shadow-inner border border-slate-700/50">
+                      <CalendarDays className="h-10 w-10 text-slate-500" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-2 tracking-tight">접수된 예약이 없습니다</h3>
+                    <p className="text-slate-400 max-w-sm">신규 예약이 들어오면 이곳에서 승인 또는 거절 처리를 할 수 있습니다.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl">
+                  <div className="overflow-x-auto custom-scrollbar">
+                    <table className="w-full text-sm text-left">
+                      <thead className="text-xs text-slate-400 uppercase bg-slate-900/90 border-b border-slate-800">
+                        <tr>
+                          <th className="px-6 py-5 font-semibold tracking-wider">장소</th>
+                          <th className="px-6 py-5 font-semibold tracking-wider">예약자 정보</th>
+                          <th className="px-6 py-5 font-semibold tracking-wider">일정 및 시간</th>
+                          <th className="px-6 py-5 font-semibold tracking-wider">상태</th>
+                          <th className="px-6 py-5 font-semibold tracking-wider text-right">관리</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reservations
+                          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                          .map((r) => (
+                            <tr key={r.id} className="group border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors duration-300">
+                              <td className="px-6 py-6 align-top">
+                                <span className={`text-[10px] font-bold px-2 py-1 rounded border uppercase tracking-widest ${r.roomType === 'hall' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
+                                  {r.roomType || 'studio'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-6 align-top">
+                                <div className="font-bold text-white text-base mb-1">{r.name}</div>
+                                <div className="text-slate-500 text-xs flex items-center gap-1.5 font-medium">
+                                  <Phone className="w-3 h-3 text-slate-600" /> {r.phone}
+                                </div>
                                 {r.message && (
                                   <div className="mt-3 p-3 bg-slate-950/50 rounded-lg border border-slate-800/50 text-slate-400 text-xs leading-relaxed max-w-xs group-hover:bg-slate-950 transition-colors">
                                     <span className="font-semibold text-primary/70 mr-1">요청사항:</span> {r.message}
                                   </div>
                                 )}
-                              </div>
-                            </td>
-                            <td className="px-8 py-6 align-top">
-                              <div className="flex flex-col gap-3">
-                                <span className="font-semibold text-slate-200 flex items-center gap-2 bg-slate-800/50 w-max px-3 py-1.5 rounded-lg border border-slate-700/50">
-                                  <CalendarDays className="w-4 h-4 text-primary" /> {r.date}
-                                </span>
-                                <div className="flex flex-wrap gap-1.5 max-w-[200px]">
-                                  {r.timeSlots.map((slot) => (
-                                    <span key={slot} className="text-[10px] font-medium px-2.5 py-1 bg-slate-950 text-slate-300 rounded-md border border-slate-800 shadow-sm">
-                                      {slot}
+                              </td>
+                              <td className="px-6 py-6 align-top">
+                                <div className="text-white font-medium text-sm flex items-center gap-2 mb-1.5">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+                                  {format(new Date(r.date), "yyyy.MM.dd (E)", { locale: ko })}
+                                </div>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {r.timeSlots.map(slot => (
+                                    <span key={slot} className="text-[10px] px-2 py-0.5 bg-slate-950 text-slate-400 rounded border border-slate-800/80 font-mono">
+                                      {slot.split(' - ')[0]}
                                     </span>
                                   ))}
                                 </div>
-                              </div>
-                            </td>
-                            <td className="px-8 py-6 align-top">
-                              <span className={`text-[11px] px-3 py-1.5 rounded-full font-bold tracking-wide shadow-sm flex items-center w-max gap-2 ${
-                                r.status === "pending" ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20" :
-                                r.status === "confirmed" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
-                                "bg-red-500/10 text-red-400 border border-red-500/20"
-                              }`}>
-                                {r.status === "pending" && <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse shadow-[0_0_5px_rgba(250,204,21,0.8)]" />}
-                                {r.status === "confirmed" && <Check className="w-3.5 h-3.5" />}
-                                {r.status === "cancelled" && <X className="w-3.5 h-3.5" />}
-                                {statusLabel(r.status)}
-                              </span>
-                            </td>
-                            <td className="px-8 py-6 text-right align-top">
-                              <div className="flex items-center justify-end gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
-                                {r.status === "pending" && (
-                                  <>
+                              </td>
+                              <td className="px-6 py-6 align-top">
+                                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold border ${statusColor(r.status)}`}>
+                                  <div className={`w-1 h-1 rounded-full ${
+                                    r.status === 'confirmed' ? 'bg-emerald-400 animate-pulse' : 
+                                    r.status === 'pending' ? 'bg-yellow-400' : 'bg-red-400'
+                                  }`} />
+                                  {statusLabel(r.status)}
+                                </span>
+                              </td>
+                              <td className="px-6 py-6 text-right align-top">
+                                <div className="flex items-center justify-end gap-2">
+                                  {r.status === "pending" && (
                                     <Button
                                       size="sm"
                                       onClick={() => handleStatusChange(r.id, "confirmed")}
-                                      className="h-8 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 hover:border-emerald-500/50 rounded-lg shadow-none"
+                                      className="h-8 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg"
                                     >
                                       승인
                                     </Button>
-                                    <Button
-                                      size="sm"
-                                      onClick={() => handleStatusChange(r.id, "cancelled")}
-                                      className="h-8 bg-transparent hover:bg-slate-800 text-slate-400 border border-slate-700 rounded-lg shadow-none"
-                                    >
-                                      거절
-                                    </Button>
-                                  </>
-                                )}
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={() => handleDelete(r.id)}
-                                  className="h-8 w-8 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                                  )}
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => handleDelete(r.id)}
+                                    className="h-8 w-8 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                        )
+                      )}
                     </tbody>
                   </table>
                 </div>
               </div>
-            )}
-          </div>
-        )}
+            )
+          )}
+        </div>
+      )}
 
         {/* Inquiries Tab */}
         {activeTab === "inquiries" && (

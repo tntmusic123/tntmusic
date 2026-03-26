@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getReservations, getSiteSettings, type Reservation, type SiteSettings } from "@/lib/store";
-import { format, addDays, startOfWeek, isSameDay } from "date-fns";
+import { addDays, format, isSameDay, startOfWeek, addWeeks, subWeeks, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import { ko } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Clock, Music, Piano, ChevronLeft, ChevronRight, Shield, Maximize, Volume2, Thermometer, Wind, Droplets } from "lucide-react";
+import { CalendarDays, Clock, Music, Piano, ChevronLeft, ChevronRight, Shield, Maximize, Volume2, Thermometer, Wind, Droplets, Info, ExternalLink, LayoutGrid, Calendar as CalendarIcon, Check, X } from "lucide-react";
+import { DayPicker } from "react-day-picker";
+import "react-day-picker/style.css";
 import { PremiumCarousel } from "@/components/PremiumCarousel";
 
 const ALL_TIME_SLOTS = [
@@ -20,6 +22,8 @@ const ALL_TIME_SLOTS = [
 export default function StudioPage() {
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [activeRoom, setActiveRoom] = useState<"studio" | "hall">("studio");
+  const [viewMode, setViewMode] = useState<"week" | "month">("month");
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
 
@@ -40,7 +44,8 @@ export default function StudioPage() {
 
   const getSlotDetails = (date: Date, hour: string) => {
     const dateStr = format(date, "yyyy-MM-dd");
-    const slotLabel = `${hour} - ${String(Number(hour.split(":")[0]) + 1).padStart(2, "0")}:00`;
+    const nextHour = Number(hour.split(":")[0]) + 1;
+    const slotLabel = `${hour} - ${nextHour === 24 ? "00" : String(nextHour).padStart(2, "0")}:00`;
 
     const isPast = (date < today && !isSameDay(date, today)) || 
                    (isSameDay(date, today) && Number(hour.split(":")[0]) < today.getHours());
@@ -189,6 +194,23 @@ export default function StudioPage() {
                     Hall
                   </button>
                 </div>
+
+                <div className="flex bg-muted p-1 rounded-xl border border-border">
+                  <button 
+                    onClick={() => setViewMode("month")}
+                    className={`p-2 rounded-lg transition-all ${viewMode === "month" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                    title="월간 달력"
+                  >
+                    <CalendarIcon className="h-4 w-4" />
+                  </button>
+                  <button 
+                    onClick={() => setViewMode("week")}
+                    className={`p-2 rounded-lg transition-all ${viewMode === "week" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                    title="주간 그리드"
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </button>
+                </div>
                 
                 <div className="flex items-center gap-1">
                   <button onClick={prevWeek} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
@@ -222,8 +244,81 @@ export default function StudioPage() {
                 </div>
               </div>
 
-              {/* Weekly Grid */}
-              <Card className="overflow-hidden">
+              {/* Weekly View / Monthly View Toggle */}
+              {viewMode === "month" ? (
+                <div className="space-y-6">
+                  <Card className="bg-card border-border shadow-sm">
+                    <CardContent className="p-6">
+                      <DayPicker
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={(date) => date && setSelectedDate(date)}
+                        locale={ko}
+                        className="mx-auto"
+                        modifiers={{
+                          booked: reservations
+                            .filter(r => (r.roomType || 'studio') === activeRoom && (r.status === 'confirmed' || r.status === 'pending'))
+                            .map(r => new Date(r.date))
+                        }}
+                        modifiersStyles={{
+                          booked: { borderBottom: '3px solid #C8A050' }
+                        }}
+                      />
+                    </CardContent>
+                  </Card>
+                  
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between border-b pb-4">
+                       <h4 className="font-bold text-lg text-foreground">
+                         {format(selectedDate, "yyyy년 MM월 dd일", { locale: ko })} 일정
+                       </h4>
+                       <span className="text-xs text-muted-foreground">{activeRoom === 'studio' ? 'Studio' : 'Hall'}</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {ALL_TIME_SLOTS.map(slot => {
+                        const startHour = slot.split(" - ")[0];
+                        const details = getSlotDetails(selectedDate, startHour);
+                        const isBooked = details.status === "booked";
+                        const res = isBooked ? details.reservation : null;
+                        
+                        return (
+                          <div 
+                            key={slot} 
+                            className={`p-4 rounded-2xl border transition-all flex items-center justify-between ${
+                              isBooked 
+                                ? "bg-red-500/5 border-red-500/20" 
+                                : details.status === 'past'
+                                  ? "bg-muted/30 border-border/50 opacity-60"
+                                  : "bg-emerald-500/5 border-emerald-500/20"
+                            }`}
+                          >
+                            <div className="flex items-center gap-4">
+                              <span className="font-mono text-sm font-bold text-muted-foreground w-12">{startHour}</span>
+                              <div className="flex flex-col">
+                                <span className={`text-sm font-bold ${isBooked ? 'text-red-600' : 'text-emerald-600'}`}>
+                                  {isBooked ? maskName(res?.name || "") : details.status === 'past' ? "지난 일정" : "예약 가능"}
+                                </span>
+                                {isBooked && (
+                                  <span className="text-[10px] text-red-500/60 font-medium">
+                                    {getTimeRange(res?.timeSlots || [])}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            {isBooked ? (
+                               <X className="h-4 w-4 text-red-400" />
+                            ) : (
+                               details.status === 'past' ? null : <Check className="h-4 w-4 text-emerald-400" />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <Card className="overflow-hidden">
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
                     <table className="w-full text-[10px]">
@@ -292,6 +387,7 @@ export default function StudioPage() {
                   </div>
                 </CardContent>
               </Card>
+              )}
 
 
               <div className="mt-4 text-center">
