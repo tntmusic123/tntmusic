@@ -19,6 +19,7 @@ const ALL_TIME_SLOTS = [
 
 export default function StudioPage() {
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
+  const [activeRoom, setActiveRoom] = useState<"studio" | "hall">("studio");
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
 
@@ -37,18 +38,40 @@ export default function StudioPage() {
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const today = new Date();
 
-  const getSlotStatus = (date: Date, hour: string): "available" | "booked" | "past" => {
+  const getSlotDetails = (date: Date, hour: string) => {
     const dateStr = format(date, "yyyy-MM-dd");
     const slotLabel = `${hour} - ${String(Number(hour.split(":")[0]) + 1).padStart(2, "0")}:00`;
 
-    if (date < today && !isSameDay(date, today)) return "past";
-    if (isSameDay(date, today) && Number(hour.split(":")[0]) < today.getHours()) return "past";
+    const isPast = (date < today && !isSameDay(date, today)) || 
+                   (isSameDay(date, today) && Number(hour.split(":")[0]) < today.getHours());
 
-    const booked = reservations
-      .filter((r) => r.date === dateStr && ["pending", "confirmed"].includes(r.status))
-      .flatMap((r) => r.timeSlots);
+    if (isPast) return { status: "past" as const };
 
-    return booked.includes(slotLabel) ? "booked" : "available";
+    const reservation = reservations.find(
+      (r) => r.date === dateStr && 
+             ["pending", "confirmed"].includes(r.status) && 
+             r.timeSlots.includes(slotLabel) &&
+             (r.roomType === activeRoom || (activeRoom === "studio" && !r.roomType))
+    );
+
+    if (reservation) return { status: "booked" as const, reservation };
+
+    return { status: "available" as const };
+  };
+
+  const maskName = (name: string) => {
+    if (!name) return "";
+    // 성만 나오고 뒤는 oo 처리 (예: 전oo, 최oo)
+    // 단, 단체명 등 긴 이름의 경우 앞글자만 따서 처리
+    return `${name.charAt(0)}oo`;
+  };
+
+  const getTimeRange = (timeSlots: string[]) => {
+    if (!timeSlots || timeSlots.length === 0) return "";
+    const sorted = [...timeSlots].sort();
+    const start = sorted[0].split(" - ")[0];
+    const end = sorted[sorted.length - 1].split(" - ")[1];
+    return `${start}~${end}`;
   };
 
   const prevWeek = () => setWeekStart((d) => addDays(d, -7));
@@ -151,10 +174,22 @@ export default function StudioPage() {
 
             {/* Right: Reservation Status */}
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
-                  <CalendarDays className="h-5 w-5 text-primary" /> 실시간 예약현황
-                </h3>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+                <div className="flex bg-muted p-1 rounded-xl border border-border">
+                  <button 
+                    onClick={() => setActiveRoom("studio")}
+                    className={`px-4 py-2 text-sm font-bold rounded-lg transition-all ${activeRoom === "studio" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    Studio
+                  </button>
+                  <button 
+                    onClick={() => setActiveRoom("hall")}
+                    className={`px-4 py-2 text-sm font-bold rounded-lg transition-all ${activeRoom === "hall" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    Hall
+                  </button>
+                </div>
+                
                 <div className="flex items-center gap-1">
                   <button onClick={prevWeek} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
                     <ChevronLeft className="h-4 w-4 text-muted-foreground" />
@@ -166,6 +201,12 @@ export default function StudioPage() {
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </button>
                 </div>
+              </div>
+
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+                  <CalendarDays className="h-5 w-5 text-primary" /> {activeRoom === "studio" ? "Studio" : "Hall"} 예약현황
+                </h3>
               </div>
 
               {/* Legend */}
@@ -185,14 +226,14 @@ export default function StudioPage() {
               <Card className="overflow-hidden">
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
-                    <table className="w-full text-xs">
+                    <table className="w-full text-[10px]">
                       <thead>
                         <tr className="border-b border-border">
-                          <th className="p-2 text-left text-muted-foreground font-medium sticky left-0 bg-card z-10 w-14">시간</th>
+                          <th className="p-2 text-left text-muted-foreground font-medium sticky left-0 bg-card z-10 w-12">시간</th>
                           {weekDays.map((day) => (
                             <th
                               key={day.toISOString()}
-                              className={`p-2 text-center font-medium min-w-[60px] ${isSameDay(day, today)
+                              className={`p-2 text-center font-medium min-w-[70px] ${isSameDay(day, today)
                                   ? "text-primary font-bold"
                                   : "text-muted-foreground"
                                 }`}
@@ -208,21 +249,39 @@ export default function StudioPage() {
                       <tbody>
                         {ALL_TIME_SLOTS.map((hour) => (
                           <tr key={hour} className="border-b border-border/50 last:border-0">
-                            <td className="p-1.5 text-muted-foreground font-mono sticky left-0 bg-card z-10">{hour}</td>
+                            <td className="p-1 text-muted-foreground font-mono sticky left-0 bg-card z-10">{hour}</td>
                             {weekDays.map((day) => {
-                              const status = getSlotStatus(day, hour);
+                              const details = getSlotDetails(day, hour);
+                              const res = details.status === "booked" ? details.reservation : null;
+                              
+                              // 첫 번째 슬롯인 경우에만 텍스트 노출
+                              const isFirstSlot = res && res.timeSlots.sort()[0].startsWith(hour);
+
                               return (
                                 <td key={`${day.toISOString()}-${hour}`} className="p-0.5">
                                   <div
-                                    className={`h-5 rounded-sm mx-0.5 ${status === "available"
+                                    className={`h-6 rounded-sm mx-0.5 flex flex-col items-center justify-center overflow-hidden leading-none ${details.status === "available"
                                         ? "bg-emerald-500/15 border border-emerald-500/30"
-                                        : status === "booked"
-                                          ? "bg-red-500/15 border border-red-500/30"
+                                        : details.status === "booked"
+                                          ? "bg-red-500/20 border border-red-500/40"
                                           : "bg-muted/50"
                                       }`}
-                                    title={`${format(day, "M/d")} ${hour} - ${status === "available" ? "예약 가능" : status === "booked" ? "예약 완료" : "지난 시간"
-                                      }`}
-                                  />
+                                    title={res 
+                                      ? `${format(day, "M/d")} ${getTimeRange(res.timeSlots)} - ${maskName(res.name)}`
+                                      : `${format(day, "M/d")} ${hour} - ${details.status === "available" ? "예약 가능" : "지난 시간"}`
+                                    }
+                                  >
+                                    {isFirstSlot && (
+                                      <div className="flex flex-col items-center scale-90 sm:scale-100">
+                                        <span className="font-bold text-red-600/80 truncate w-full text-center">
+                                          {maskName(res.name)}
+                                        </span>
+                                        <span className="text-[8px] text-red-500/60 opacity-80 whitespace-nowrap">
+                                          {getTimeRange(res.timeSlots)}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
                                 </td>
                               );
                             })}
@@ -233,6 +292,7 @@ export default function StudioPage() {
                   </div>
                 </CardContent>
               </Card>
+
 
               <div className="mt-4 text-center">
                 <Link href="/studio/book">

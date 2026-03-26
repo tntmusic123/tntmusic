@@ -43,6 +43,7 @@ export default function BookingForm() {
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [roomType, setRoomType] = useState<"studio" | "hall">("studio");
 
   const [settings, setSettings] = useState<SiteSettings | null>(null);
 
@@ -86,6 +87,7 @@ export default function BookingForm() {
       ...data,
       date: format(selectedDate, "yyyy-MM-dd"),
       timeSlots: selectedSlots,
+      roomType: roomType,
     });
 
     await sendAdminNotification({
@@ -164,6 +166,27 @@ export default function BookingForm() {
             <div>
               <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">1</span>
+                장소 선택
+              </h2>
+              <div className="flex gap-4 p-1 bg-muted rounded-2xl border border-border w-full sm:w-max mb-10">
+                <button 
+                  type="button"
+                  onClick={() => setRoomType("studio")}
+                  className={`px-8 py-3 text-sm font-bold rounded-xl transition-all flex-1 sm:flex-none ${roomType === "studio" ? "bg-background text-primary shadow-lg border border-primary/20" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  Studio (연습실)
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setRoomType("hall")}
+                  className={`px-8 py-3 text-sm font-bold rounded-xl transition-all flex-1 sm:flex-none ${roomType === "hall" ? "bg-background text-primary shadow-lg border border-primary/20" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  Hall (홀)
+                </button>
+              </div>
+
+              <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
                 <CalendarDays className="h-4 w-4" /> 날짜 선택
               </h2>
               <Card>
@@ -191,7 +214,7 @@ export default function BookingForm() {
 
             <div>
               <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">3</span>
                 <Clock className="h-4 w-4" /> 시간 선택 <span className="text-xs text-muted-foreground font-normal">(복수 선택 가능 · 24시간 운영)</span>
               </h2>
 
@@ -236,7 +259,7 @@ export default function BookingForm() {
 
             <div>
               <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">3</span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">4</span>
                 <User className="h-4 w-4" /> 예약자 정보
               </h2>
               <Card>

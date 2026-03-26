@@ -14,6 +14,7 @@ export interface Reservation {
   phone: string;
   email?: string;
   message?: string;
+  roomType: "studio" | "hall";
   status: "pending" | "confirmed" | "cancelled";
   createdAt: string;
 }
@@ -94,16 +95,30 @@ export async function getReservations(): Promise<Reservation[]> {
     return [];
   }
 
-  return data.map((d: any) => ({
-    id: d.id,
-    date: d.date,
-    timeSlots: d.time_slots,
-    name: d.user_name,
-    phone: d.user_phone,
-    message: d.user_details,
-    status: d.status,
-    createdAt: d.created_at,
-  }));
+  return data.map((d: any) => {
+    let message = d.user_details || "";
+    let roomType: "studio" | "hall" = "studio";
+
+    if (message.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(message);
+        roomType = parsed.room || "studio";
+        message = parsed.message || "";
+      } catch (e) {}
+    }
+
+    return {
+      id: d.id,
+      date: d.date,
+      timeSlots: d.time_slots,
+      name: d.user_name,
+      phone: d.user_phone,
+      message: message,
+      roomType: roomType,
+      status: d.status,
+      createdAt: d.created_at,
+    };
+  });
 }
 
 export async function addReservation(
@@ -116,7 +131,7 @@ export async function addReservation(
       time_slots: reservation.timeSlots,
       user_name: reservation.name,
       user_phone: reservation.phone,
-      user_details: reservation.message || "",
+      user_details: JSON.stringify({ room: reservation.roomType || 'studio', message: reservation.message || "" }),
       status: "pending",
     })
     .select()
@@ -142,7 +157,8 @@ export async function addReservation(
     timeSlots: data.time_slots,
     name: data.user_name,
     phone: data.user_phone,
-    message: data.user_details,
+    message: reservation.message,
+    roomType: reservation.roomType || "studio",
     status: data.status,
     createdAt: data.created_at,
   };
